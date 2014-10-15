@@ -10,9 +10,9 @@ source("train.lm.r")
 
 includeLibraries()
 
-useLogTransform = FALSE
-validationRatio = 0.3
-filter = "199|200"
+useLogTransform = TRUE
+validationRatio = 0.15
+filter = "199|2000|2001|2002|2003|2004"
 
 rawData = readData(useLogTransform)
 
@@ -22,13 +22,14 @@ seeds = c(234294, 340549, 879138, 188231, 646946, 160318, 853181, 551724, 398728
 # additional seeds to try
 # seeds = c(seeds, 917130, 539667, 239507, 221913, 321676, 153055, 804996, 903034, 52264, 587371)
 
+formula = prepareFormula(useLogTransform)
+
 testError = 0
 for(seed in seeds) {
   set.seed(seed)
 
   data = preparePredictors(rawData, filter, validationRatio)
   data = cleanData(data)
-  formula = prepareFormula(useLogTransform)
   
   model = trainLMModel(formula, data$trainSet)
   summary(model)

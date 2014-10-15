@@ -6,52 +6,51 @@ source("config.r")
 source("helpers.r")
 source("data.r")
 
-set.seed(30)
-validationRatio = 0.25
+validationRatio = 0.15
 filter = "199|2000|2001|2002|2003|2004|2005|2006|2007"
 
-trees = 5000
-bagfrac = 0.5
-shrinkage = 0.002
+useLogTransform = FALSE
+trees = 1000
+bagfrac = 0.7
+shrinkage = 0.005
 depth = 4
 
-setConfig()
-data = readData()
+includeLibraries()
+rawData = readData(useLogTransform)
 
-data = preparePredictors(data, filter, validationRatio)
-data = cleanData(data)
-
-formula = prepareFormula()
+# for some reasom gbm is not picking that up in the function
 polyOrder = 1
+formula = prepareFormula(useLogTransform)
+
+seeds = c(234294, 340549, 879138, 188231, 646946, 160318, 853181, 551724, 398728, 323126)
+
+testError = 0
+for(seed in seeds) {
   
-gbm.orch = gbm(formula, data = data$trainSet,distribution = "gaussian", 
-               bag.fraction = bagfrac, shrinkage = shrinkage, n.trees = trees, interaction.depth = depth)
-
-summary(gbm.orch)
-gbm.boost = predict(gbm.orch , newdata=data$testSet, n.trees=trees)
-
-error = 0;
-residuals = c()
-answers = c()
-for(i in 1:length(data$testAnswers)) {
-  correctAnswer = data$testAnswers[[i]]
-  answer = gbm.boost[i]
-  answers = c(answers, answer)
-  residuals = c(residuals, correctAnswer - answer)
-  error = error + (answer-correctAnswer)^2 #(log(answer+1)-log(correctAnswer+1))^2
+  set.seed(seed)
+  data = preparePredictors(rawData, filter, validationRatio)
+  data = cleanData(data)
+  
+  gbm.orch = gbm(formula, data = data$trainSet, distribution = "gaussian", 
+                 bag.fraction = bagfrac, shrinkage = shrinkage, n.trees = trees, interaction.depth = depth)
+  
+  summary(gbm.orch)
+  gbm.boost = predict(gbm.orch , newdata=data$testSet, n.trees=trees)
+  
+  testError = testError + evaluateModel(gbm.boost, data$testAnswers, useLogTransform)
 }
 
-plot(answers, residuals)
-
-error = error / length(data$testAnswers)
-error = sqrt(error)
-print(paste("Error in validation set: ", error, " based on: ", length(data$testAnswers), " samples"))
+tries = length(seeds)
+print(paste("Final test error=", testError / tries, " based on ", tries, " tries"))
 
 gbm.orch = gbm(formula, data=data$allSet,distribution="gaussian", 
                bag.fraction = bagfrac, shrinkage = shrinkage, n.trees = trees, interaction.depth = depth)
 
 predictSet = prepareDataToPredict(data$predictors)
 predictions = predict(gbm.orch, newdata=predictSet$testSet, n.trees=trees)
-predictions = exp(predictions)-1
+
+if(useLogTransform) {
+  predictions = exp(predictions)-1
+}
 
 dumpResponse("ML_gbm_sub", predictSet$accounts, predictions)

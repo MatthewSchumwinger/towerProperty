@@ -10,28 +10,33 @@ adjustAnswer = function(score) {
 }
 
 prepareFormula = function(useLogTransform) {
-  polyOrder = 1  
+  polyOrder = 1
   
   # we might try different formulas for log transform and without it
   if(useLogTransform) {
     
     #formula for log transformation
     formula = as.formula(
-      total ~ . 
-      +
+      total ~ . +
       # log polynomials for total subs
+      poly(log(1+total_2008_2009), polyOrder) + 
+      poly(log(1+total_2009_2010), polyOrder) + 
       poly(log(1+total_2010_2011), polyOrder) + 
       poly(log(1+total_2011_2012), polyOrder) + 
       poly(log(1+total_2012_2013), polyOrder) + 
       poly(log(1+total_2013_2014), polyOrder) +
       
       # log polynomials for no seats 
+      poly(log(1+no.seats_2008_2009), polyOrder) + 
+      poly(log(1+no.seats_2009_2010), polyOrder) + 
       poly(log(1+no.seats_2010_2011), polyOrder) +
       poly(log(1+no.seats_2011_2012), polyOrder) +
       poly(log(1+no.seats_2012_2013), polyOrder) +
       poly(log(1+no.seats_2013_2014), polyOrder) +
       
       # log polynomials for prive levels
+      poly(log(1+price.level_2008_2009), polyOrder) + 
+      poly(log(1+price.level_2009_2010), polyOrder) + 
       poly(log(1+price.level_2010_2011), polyOrder) +
       poly(log(1+price.level_2011_2012), polyOrder) +
       poly(log(1+price.level_2012_2013), polyOrder) +
@@ -39,6 +44,8 @@ prepareFormula = function(useLogTransform) {
     )
     
   } else {
+    
+    # regular case
     
     formula = as.formula(
       total ~ . 
