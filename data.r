@@ -1,8 +1,12 @@
 
-readData = function() {
+readData = function(useLogTransform) {
   
   train = read.csv('data\\train.csv')
-
+  
+  if(useLogTransform) {
+    train$total = log(1+train$total)  
+  }
+  
   subscriptions = read.csv('data\\subscriptions.csv',colClasses='character')
   subscriptions = subscriptions[,c("account.id", "price.level", "no.seats", "total", "season" )]
 
@@ -10,15 +14,19 @@ readData = function() {
   accounts = accounts[,c("account.id", "amount.donated.2013", "amount.donated.lifetime","no.donations.lifetime")] #Kartik added
   # next step "billing.zip.code"
   
-  return (list("train"=train, "subscriptions"=subscriptions, "accounts"=accounts))
+  concert = read.csv('data\\concert_table_summary.csv',colClasses='character')
+  return (list("train"=train, "subscriptions"=subscriptions, "accounts"=accounts, "concert"=concert))
 }
 
 preparePredictors = function(data, filterRegex, validationRatio) {
   
   data$accounts[2:4] = sapply(data$accounts[2:4], as.numeric) 
   data$subscriptions[is.na(data$subscriptions)]=0
-  
   data$subscriptions[2:4] = sapply(data$subscriptions[2:4], as.numeric)
+
+  data$concert[2:34] = sapply(data$concert[2:34], as.numeric) 
+  concertLong = melt(data$concert, id='season')
+  
   subsTrain = data$subscriptions[which(data$subscriptions$season != "2014-2015"),]
   subsTrainLong = melt(subsTrain,id=c('account.id','season'))
   subsTrainWide = dcast(subsTrainLong, account.id~variable+season,value.var="value")

@@ -1,8 +1,6 @@
-setConfig = function() {
+includeLibraries = function() {
 
   library(reshape2)
   library(stringr)
-  
-  set.seed(1)    
 }
 

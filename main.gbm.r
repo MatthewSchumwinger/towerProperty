@@ -22,7 +22,8 @@ data = preparePredictors(data, filter, validationRatio)
 data = cleanData(data)
 
 formula = prepareFormula()
-
+polyOrder = 1
+  
 gbm.orch = gbm(formula, data = data$trainSet,distribution = "gaussian", 
                bag.fraction = bagfrac, shrinkage = shrinkage, n.trees = trees, interaction.depth = depth)
 
@@ -37,7 +38,7 @@ for(i in 1:length(data$testAnswers)) {
   answer = gbm.boost[i]
   answers = c(answers, answer)
   residuals = c(residuals, correctAnswer - answer)
-  error = error + (log(answer+1)-log(correctAnswer+1))^2
+  error = error + (answer-correctAnswer)^2 #(log(answer+1)-log(correctAnswer+1))^2
 }
 
 plot(answers, residuals)
@@ -51,5 +52,6 @@ gbm.orch = gbm(formula, data=data$allSet,distribution="gaussian",
 
 predictSet = prepareDataToPredict(data$predictors)
 predictions = predict(gbm.orch, newdata=predictSet$testSet, n.trees=trees)
+predictions = exp(predictions)-1
 
 dumpResponse("ML_gbm_sub", predictSet$accounts, predictions)

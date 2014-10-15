@@ -8,23 +8,37 @@ source("data.r")
 
 source("train.lm.r")
 
-validationRatio = 0.25
-filter = "199|200|2010"
+includeLibraries()
 
-setConfig()
-data = readData()
+useLogTransform = FALSE
+validationRatio = 0.3
+filter = "199|200"
 
-data = preparePredictors(data, filter, validationRatio)
-data = cleanData(data)
+rawData = readData(useLogTransform)
 
-formula = prepareFormula()
+# we will try a few different splits with different seeds
+seeds = c(234294, 340549, 879138, 188231, 646946, 160318, 853181, 551724, 398728, 323126)
 
-model = trainLMModel(formula, data$trainSet)
+# additional seeds to try
+# seeds = c(seeds, 917130, 539667, 239507, 221913, 321676, 153055, 804996, 903034, 52264, 587371)
 
-debugLMFit(model)
+testError = 0
+for(seed in seeds) {
+  set.seed(seed)
 
-predictions = predictFromLMModel(model, data$testSet)
-error = evaluateModel(predictions, data$testAnswers)
+  data = preparePredictors(rawData, filter, validationRatio)
+  data = cleanData(data)
+  formula = prepareFormula(useLogTransform)
+  
+  model = trainLMModel(formula, data$trainSet)
+  summary(model)
+  debugLMFit(model)
+  predictions = predictFromLMModel(model, data$testSet)
+  testError = testError + evaluateModel(predictions, data$testAnswers, useLogTransform)
+}
+
+tries = length(seeds)
+print(paste("Final test error=", testError / tries, " based on ", tries, " tries"))
 
 debugFitAndResiduals(predictions, data$testAnswers)
 
@@ -35,4 +49,9 @@ model= trainLMModel(formula, data$allSet)
 predictSet = prepareDataToPredict(data$predictors)
 predictions = predictFromLMModel(model, predictSet$testSet)
 
-dumpResponse("ML_lm_sub", predictSet$accounts, predictions)
+# we need to revert log(y+1) modification
+if(useLogTransform) { 
+  predictions = exp(predictions)-1
+}
+
+dumpResponse("ML_lm_sub+", predictSet$accounts, predictions)
