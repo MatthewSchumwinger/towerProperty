@@ -36,8 +36,10 @@ preparePredictors = function(data, filterRegex, validationRatio) {
   names(subsTrainWide) = sapply(names(subsTrainWide), str_replace, "-", "_")
   
   # remove old data from the set
-  subsTrainWide = subsTrainWide[,-grep(filterRegex, colnames(subsTrainWide))]
- 
+  if(nchar(filterRegex) > 0) {
+    subsTrainWide = subsTrainWide[,-grep(filterRegex, colnames(subsTrainWide))]
+  }
+  
   trainPlusTotal = merge(data$train, subsTrainWide,by="account.id",all.x=TRUE, all.y=FALSE)
   trainPlusTotal[is.na(trainPlusTotal)]=0
   
