@@ -10,9 +10,9 @@ source("train.lm.r")
 
 includeLibraries()
 
-useLogTransform = TRUE
+useLogTransform = FALSE
 validationRatio = 0.15
-filter = "199|2000|2001|2002|2003|2004"
+filter = "199|200|add_"
 
 rawData = readData(useLogTransform)
 
@@ -55,4 +55,4 @@ if(useLogTransform) {
   predictions = exp(predictions)-1
 }
 
-dumpResponse("ML_lm_sub+", predictSet$accounts, predictions)
+dumpResponse("ML_lm_sub_", predictSet$accounts, predictions)
