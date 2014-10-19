@@ -56,7 +56,7 @@ preparePredictors = function(data, filterRegex, validationRatio) {
   ticketsPerSeason = dcast(data$tickets[1:3], account.id~season, value.var = "set", fun.aggregate = length)
   colnames(ticketsPerSeason)[2:5] = c("add_tickets_total_2010_2011", "add_tickets_total_2011_2012", "add_tickets_total_2012_2013", "add_tickets_total_2013_2014") 
   
-  seatsPerSeason = dcast(tickets[c(1,2,5)], account.id~season, value.var = "no.seats", fun.aggregate = sum)
+  seatsPerSeason = dcast(data$tickets[c(1,2,5)], account.id~season, value.var = "no.seats", fun.aggregate = sum)
   colnames(seatsPerSeason)[2:5] = c("add_tickets_seats_2010_2011", "add_tickets_seats_2011_2012", "add_tickets_seats_2012_2013", "add_tickets_seats_2013_2014") 
   
   subsTrain = data$subscriptions[which(data$subscriptions$season != "2014-2015"),]
@@ -105,11 +105,22 @@ cleanData = function (data) {
   # WARNING: should be done for both data$trainSet and data$allSet !
 
   #high residuals
+  
+  
   data$trainSet=data$trainSet[!((rownames(data$trainSet)==6031)),]
   data$allSet=data$allSet[!((rownames(data$allSet)==6031)),]
 
   data$trainSet=data$trainSet[!((rownames(data$trainSet)==1472)),]
   data$allSet=data$allSet[!((rownames(data$allSet)==1472)),]
+
+  #data$trainSet=data$trainSet[!((rownames(data$trainSet)==1649)),]
+  #data$allSet=data$allSet[!((rownames(data$allSet)==1649)),]
+
+  #data$trainSet=data$trainSet[!((rownames(data$trainSet)==3736)),]
+  #data$allSet=data$allSet[!((rownames(data$allSet)==3736)),]
+  
+  #data$trainSet=data$trainSet[!((rownames(data$trainSet)==567)),]
+  #data$allSet=data$allSet[!((rownames(data$allSet)==567)),]
   
   data$trainSet=data$trainSet[!((rownames(data$trainSet)==306)),]
   data$trainSet=data$trainSet[!((rownames(data$trainSet)==363)),]
@@ -118,10 +129,9 @@ cleanData = function (data) {
   data$allSet=data$allSet[!((rownames(data$allSet)==306)),]
   data$allSet=data$allSet[!((rownames(data$allSet)==363)),]
   data$allSet=data$allSet[!((rownames(data$allSet)==427)),]
-  # 363, 306 ?  
   
-  #high leverage
-  # 427 ?
+  #data$trainSet = data$trainSet[ - (abs(data$trainSet$total - data$trainSet$total_2013_2014)>1.5),]
+  #data$allSet = data$allSet[ - (abs(data$allSet$total - data$allSet$total_2013_2014)>1.5),]
   
   return (data)
 }
