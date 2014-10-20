@@ -23,7 +23,12 @@ readData = function(useLogTransform) {
   tickets$price.level[nchar(tickets$price.level) > 1] = 1
   
   concert = read.csv('data\\concert_table_summary.csv',colClasses='character')
-  return (list("train"=train, "subscriptions"=subscriptions, "accounts"=accounts, "concert"=concert, "tickets"=tickets))
+
+  concert_table = read.csv('data\\concert_table_set_2014.csv',colClasses='character')
+  concert_table = concert_table[, ! (colnames(concert_table) %in% c("concert.name", "who", "what"))]
+  
+  
+  return (list("train"=train, "subscriptions"=subscriptions, "accounts"=accounts, "concert"=concert, "tickets"=tickets, "concert_table"=concert_table))
 }
 
 preparePredictors = function(data, filterRegex, validationRatio) {
@@ -58,6 +63,41 @@ preparePredictors = function(data, filterRegex, validationRatio) {
   
   seatsPerSeason = dcast(data$tickets[c(1,2,5)], account.id~season, value.var = "no.seats", fun.aggregate = sum)
   colnames(seatsPerSeason)[2:5] = c("add_tickets_seats_2010_2011", "add_tickets_seats_2011_2012", "add_tickets_seats_2012_2013", "add_tickets_seats_2013_2014") 
+
+  #########################
+  # parsing concerts table#
+  #########################
+  data$concert_table[2:35] = sapply(data$concert_table[2:35], as.numeric) 
+  concertsInSeasons = melt(data$concert_table, id = c("season", "set"))
+  concertsInSeasonsWithFreq = dcast(concertsInSeasons, season~variable, value.var = "value", fun.aggregate = sum)
+
+  #concertsInSeasonsWithoutFreq = dcast(concertsInSeasons, season~variable, value.var = "value", fun.aggregate = max)
+  totalPerAccount = data$subscriptions[which(data$subscriptions$season != "2014-2015"),]
+  totalPerAccount = totalPerAccount[,c("account.id", "total", "season")]
+  totalPerAccountWithConcerts = merge(totalPerAccount, concertsInSeasonsWithFreq, by="season")
+  totalPerAccountWithConcerts[4:36] = totalPerAccountWithConcerts[4:36] * totalPerAccountWithConcerts$total
+
+  # removing total as it is no longer needed
+  totalPerAccountWithConcerts = totalPerAccountWithConcerts[,-3]
+  accountsPreferences = melt(totalPerAccountWithConcerts, id = c("account.id", "season"))
+  accountsPreferences = dcast(accountsPreferences, account.id~variable, value.var="value", fun.aggregate = sum)
+  
+  #adjusting for number of concerts in 2014 - should we filter only to those that will be played in 2014-2015?
+  #accountsPreferencesAdjustedTo2014Concerts = accountsPreferences[,c("account.id", "BACH", "HANDEL", "TELEMAN", "JOHANN", "VIVALDI", "HAYDN", "ROSSINI")]
+  accountsPreferencesAdjustedTo2014Concerts = accountsPreferences
+  
+  #adjusting for frequencies in 2014-2015 - should we do that?
+  accountsPreferencesAdjustedTo2014Concerts$BACH = 3*accountsPreferencesAdjustedTo2014Concerts$BACH
+  accountsPreferencesAdjustedTo2014Concerts$VIVALDI = 2*accountsPreferencesAdjustedTo2014Concerts$VIVALDI
+  accountsPreferencesAdjustedTo2014Concerts$HAYDN = 2*accountsPreferencesAdjustedTo2014Concerts$HAYDN
+  
+  colnum = ncol(accountsPreferencesAdjustedTo2014Concerts)
+  colnames(accountsPreferencesAdjustedTo2014Concerts)[2:colnum] = paste("conc", colnames(accountsPreferencesAdjustedTo2014Concerts)[2:colnum], sep = "_")
+  accountsPreferencesAdjustedTo2014Concerts[2:colnum] = sapply(accountsPreferencesAdjustedTo2014Concerts[2:colnum], as.numeric) 
+  #############################
+  # end parsing concerts table#
+  #############################
+  
   
   subsTrain = data$subscriptions[which(data$subscriptions$season != "2014-2015"),]
   subsTrainLong = melt(subsTrain,id=c('account.id','season'))
@@ -68,6 +108,9 @@ preparePredictors = function(data, filterRegex, validationRatio) {
   subsTrainWide = merge(subsTrainWide, seatsPerSeason, by = "account.id", all.x = TRUE)
   
   subsTrainWide = merge(subsTrainWide, ticketsWide, by = "account.id", all.x = TRUE)
+
+  subsTrainWide = merge(subsTrainWide, accountsPreferencesAdjustedTo2014Concerts, by = "account.id", all.x = TRUE)
+  
   
   # fixing hyphens in names
   names(subsTrainWide) = sapply(names(subsTrainWide), str_replace, "-", "_")
