@@ -72,7 +72,7 @@ preparePredictors = function(data, filterRegex, validationRatio) {
   
   #2 possible versions weighted by the number of concerts that year or unweighted
   concertsInSeasonsWithFreq = dcast(concertsInSeasons, season~variable, value.var = "value", fun.aggregate = sum)
-  concertsInSeasonsWithoutFreq = dcast(concertsInSeasons, season~variable, value.var = "value", fun.aggregate = max)
+  #concertsInSeasonsWithoutFreq = dcast(concertsInSeasons, season~variable, value.var = "value", fun.aggregate = max)
   
   totalPerAccount = data$subscriptions[which(data$subscriptions$season != "2014-2015"),]
   totalPerAccount = totalPerAccount[,c("account.id", "total", "season")]
