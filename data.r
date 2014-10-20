@@ -69,27 +69,29 @@ preparePredictors = function(data, filterRegex, validationRatio) {
   #########################
   data$concert_table[2:35] = sapply(data$concert_table[2:35], as.numeric) 
   concertsInSeasons = melt(data$concert_table, id = c("season", "set"))
+  
+  #2 possible versions weighted by the number of concerts that year or unweighted
   concertsInSeasonsWithFreq = dcast(concertsInSeasons, season~variable, value.var = "value", fun.aggregate = sum)
-
-  #concertsInSeasonsWithoutFreq = dcast(concertsInSeasons, season~variable, value.var = "value", fun.aggregate = max)
+  concertsInSeasonsWithoutFreq = dcast(concertsInSeasons, season~variable, value.var = "value", fun.aggregate = max)
+  
   totalPerAccount = data$subscriptions[which(data$subscriptions$season != "2014-2015"),]
   totalPerAccount = totalPerAccount[,c("account.id", "total", "season")]
+  
+  #select either concertsInSeasonsWithFreq or concertsInSeasonsWithoutFreq for weighted on unwieghted version
   totalPerAccountWithConcerts = merge(totalPerAccount, concertsInSeasonsWithFreq, by="season")
+  
+  #comment that line if you don't want to multiply by number of subscriptions bought that year
   totalPerAccountWithConcerts[4:36] = totalPerAccountWithConcerts[4:36] * totalPerAccountWithConcerts$total
 
-  # removing total as it is no longer needed
+  # removing total variable as it is no longer needed
   totalPerAccountWithConcerts = totalPerAccountWithConcerts[,-3]
+
   accountsPreferences = melt(totalPerAccountWithConcerts, id = c("account.id", "season"))
   accountsPreferences = dcast(accountsPreferences, account.id~variable, value.var="value", fun.aggregate = sum)
   
   #adjusting for number of concerts in 2014 - should we filter only to those that will be played in 2014-2015?
   #accountsPreferencesAdjustedTo2014Concerts = accountsPreferences[,c("account.id", "BACH", "HANDEL", "TELEMAN", "JOHANN", "VIVALDI", "HAYDN", "ROSSINI")]
   accountsPreferencesAdjustedTo2014Concerts = accountsPreferences
-  
-  #adjusting for frequencies in 2014-2015 - should we do that?
-  accountsPreferencesAdjustedTo2014Concerts$BACH = 3*accountsPreferencesAdjustedTo2014Concerts$BACH
-  accountsPreferencesAdjustedTo2014Concerts$VIVALDI = 2*accountsPreferencesAdjustedTo2014Concerts$VIVALDI
-  accountsPreferencesAdjustedTo2014Concerts$HAYDN = 2*accountsPreferencesAdjustedTo2014Concerts$HAYDN
   
   colnum = ncol(accountsPreferencesAdjustedTo2014Concerts)
   colnames(accountsPreferencesAdjustedTo2014Concerts)[2:colnum] = paste("conc", colnames(accountsPreferencesAdjustedTo2014Concerts)[2:colnum], sep = "_")
