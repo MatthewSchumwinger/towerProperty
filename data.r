@@ -7,8 +7,8 @@ readData = function(useLogTransform) {
     train$total = log(1+train$total)  
   }
   
-  subscriptions = read.csv('data\\subscriptions.csv',colClasses='character')
-  subscriptions = subscriptions[,c("account.id", "price.level", "no.seats", "total", "season" )]
+  subscriptions = read.csv('data\\subscriptions.csv',colClasses='character') # MS: include all variables
+  #subscriptions = subscriptions[,c("account.id", "price.level", "no.seats", "total", "season" )]
 
   accounts = read.csv('data\\account.csv',colClasses='character') #Kartik added
   accounts = accounts[,c("account.id", "amount.donated.2013", "amount.donated.lifetime","no.donations.lifetime")] #Kartik added
@@ -44,9 +44,27 @@ preparePredictors = function(data, filterRegex, validationRatio) {
   #avg donation if donated last year
   data$accounts$add_avg.donation.if.donated.2013 = data$accounts$add_donated.2013 * data$accounts$add_avg.donation
   
-  data$subscriptions[is.na(data$subscriptions)]=0
-  data$subscriptions[2:4] = sapply(data$subscriptions[2:4], as.numeric)
-
+  #data$subscriptions[is.na(data$subscriptions), c("price.level", "no.seats", "total", "season" )]=0
+  #data$subscriptions[2:4] = sapply(data$subscriptions[2:4], as.numeric)
+  ### -- new code from MS to bring in categorical variables -- ## 
+  ### -- and properly classify as numeric, or as factors    -- ##
+  numVar <- c("price.level", "no.seats", "total") # numeric variables
+  catVar <- c("season", "package", "location", "section", "multiple.subs") # categorical variables
+  # only convert NAs to zero for numeric variables
+  data$subscriptions[,numVar] <- 
+    apply(data$subscriptions[, numVar], 2, 
+          function(x){replace(x, is.na(x), 0)}) #3534 NAs in $price.level changed to 0
+  data$subscriptions[numVar] = sapply(data$subscriptions[numVar], as.numeric)
+  # convert catagorical variables to factors (may be unceccesary?)
+  # data$subscriptions[numVar] = sapply(data$subscriptions[numVar], as.factor) # this line doesn't work
+  data$subscriptions$season <- as.factor(data$subscriptions$season)
+  data$subscriptions$package <- as.factor(data$subscriptions$package)
+  data$subscriptions$location <- as.factor(data$subscriptions$location)
+  data$subscriptions$section <- as.factor(data$subscriptions$section)
+  data$subscriptions$multiple.subs <- as.factor(data$subscriptions$multiple.subs)
+  ### -- end new MS code -- ##
+  
+  
   data$concert[2:34] = sapply(data$concert[2:34], as.numeric) 
   concertLong = melt(data$concert, id='season')
 
