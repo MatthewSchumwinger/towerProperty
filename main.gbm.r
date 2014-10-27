@@ -9,14 +9,13 @@ source("data.r")
 library(gbm)
 
 validationRatio = 0.15
-filter = "199|2000|2001|2002|2003|2004|2005|2006|2007|add_"
-#199|2000|2001|2002|2003|2004|2005|2006|2007
+filter = "199|200|price|add_no|MOZART|ROSSINI|conc_missed|add_tickets|section_2013_2014|add_donated.2013|multiple.subs|package|billing.city|section" 
 
-useLogTransform = FALSE
-trees = 4000
-bagfrac = 0.5
-shrinkage = 0.002
-depth = 4
+useLogTransform = FALSE 
+trees = 4000 
+bagfrac = 0.5 
+shrinkage = 0.001
+depth = 8
 
 includeLibraries()
 rawData = readData(useLogTransform)
@@ -32,8 +31,8 @@ for(seed in seeds) {
   
   set.seed(seed)
   data = preparePredictors(rawData, filter, validationRatio)
-  data = cleanData(data)
-  
+#  data = cleanData(data)
+
   gbm.orch = gbm(formula, data = data$trainSet, distribution = "gaussian", 
                  bag.fraction = bagfrac, shrinkage = shrinkage, n.trees = trees, interaction.depth = depth)
   
@@ -46,6 +45,7 @@ for(seed in seeds) {
 
 tries = length(seeds)
 print(paste("Final test error=", testError / tries, " based on ", tries, " tries"))
+summary(gbm.orch)
 
 
 #deep check
@@ -65,6 +65,8 @@ dim(data$trainAccountsId)
 
 gbm.orch = gbm(formula, data=data$allSet,distribution="gaussian", 
                bag.fraction = bagfrac, shrinkage = shrinkage, n.trees = trees, interaction.depth = depth)
+
+summary(gbm.orch)
 
 predictSet = prepareDataToPredict(data$predictors)
 predictions = predict(gbm.orch, newdata=predictSet$testSet, n.trees=trees)

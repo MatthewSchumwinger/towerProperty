@@ -1,12 +1,15 @@
 
 adjustAnswer = function(score) {
   
-  if(score < 0.0) {
+  threshold = 0.03
+  if(score < threshold) {
     return (0)
   }
+  candidate = round(score*2)/2
+  if(abs(candidate - score) < threshold) {
+    return (candidate)
+  }
   return (score)
-  #answerIncreaseFactor=0.05
-  #return (round(score*2 + answerIncreaseFactor)/2)
 }
 
 prepareFormula = function(useLogTransform) {
@@ -115,4 +118,10 @@ evaluateModel = function(predictions, correctAnswers, useLogTransform) {
   error = sqrt(error)
   print(paste("Error in validation set: ", error, " based on: ", length(correctAnswers), " samples"))
   return (error)
+}
+
+normalizeStrings = function (data) {
+  tmp = sapply(data, tolower)
+  tmp = sapply(tmp, str_trim)
+  return (tmp)
 }
