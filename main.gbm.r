@@ -1,12 +1,15 @@
 
 # path to kaggle data and other files
 setwd("C:\\Users\\mlewo_000\\Documents\\GitHub\\https---github.com-MatthewSchumwinger-towerProperty\\towerProperty")
+#setwd("~/Documents/towerProperty") # Matt's wd path
 
 source("config.r")
 source("helpers.r")
 source("data.r")
 
 library(gbm)
+
+#setConfigForMyEnvironment() # special helper function for Matt's environment
 
 validationRatio = 0.15
 filter = "199|200|price|add_no|MOZART|ROSSINI|conc_missed|add_tickets|section_2013_2014|add_donated.2013|multiple.subs|package|billing.city|section" 
