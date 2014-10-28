@@ -1,6 +1,8 @@
 
 # path to kaggle data and other files
 setwd("C:\\Users\\mlewo_000\\Documents\\GitHub\\https---github.com-MatthewSchumwinger-towerProperty\\towerProperty")
+#setwd("~/Documents/towerProperty") # Matt's wd path
+
 
 source("config.r")
 source("helpers.r")
@@ -8,6 +10,7 @@ source("data.r")
 
 source("train.lm.r")
 
+#setConfigForMyEnvironment() # special helper function for Matt's environment
 includeLibraries()
 
 useLogTransform = FALSE

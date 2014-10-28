@@ -88,3 +88,10 @@ table(wide[, 163])
 # find total subscrptions for the 13-14 season [, 156]
 table(wide[, 156])
 table(is.na(wide[, 156]))
+
+
+
+## for Kaggle
+## Create a formula for a model with a large number of variables:
+xnam <- paste0("x", 1:25)
+(fmla <- as.formula(paste("y ~ ", paste(xnam, collapse= "+"))))

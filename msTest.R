@@ -9,7 +9,7 @@ readData = function(useLogTransform) {
   
   subscriptions = read.csv('data/subscriptions.csv',colClasses='character') # MS: include all variables
   #subscriptions = subscriptions[,c("account.id", "price.level", "no.seats", "total", "season" )]
-
+  
   accounts = read.csv('data/account.csv',colClasses='character') #Kartik added
   #accounts = accounts[,c("account.id", "amount.donated.2013", "amount.donated.lifetime","no.donations.lifetime")] #Kartik added
   # next step "billing.zip.code"
@@ -23,7 +23,7 @@ readData = function(useLogTransform) {
   tickets$price.level[nchar(tickets$price.level) > 1] = 1
   
   concert = read.csv('data/concert_table_summary.csv',colClasses='character')
-
+  
   concert_table = read.csv('data/concert_table_set_2014.csv',colClasses='character')
   concert_table = concert_table[, ! (colnames(concert_table) %in% c("concert.name", "who", "what"))]
   
@@ -35,7 +35,7 @@ preparePredictors = function(data, filterRegex, validationRatio) {
   
   numVar = c("amount.donated.2013", "amount.donated.lifetime", "no.donations.lifetime", "years.donating", "is.us")
   catVar = c("billing.city", "relationship")
-
+  
   data$accounts$first.donated = substr(data$accounts$first.donated, 1, 4)
   data$accounts$first.donated[data$accounts$first.donated == ""] = "2014"
   data$accounts$first.donated = sapply(data$accounts$first.donated, as.numeric)
@@ -46,7 +46,7 @@ preparePredictors = function(data, filterRegex, validationRatio) {
   for(cat in catVar) {
     data$accounts[,cat] = normalizeStrings(data$accounts[,cat])
   }
-    
+  
   data$accounts[numVar] = sapply(data$accounts[numVar], as.numeric) 
   data$accounts[catVar] = sapply(data$accounts[catVar], as.factor) 
   
@@ -57,7 +57,7 @@ preparePredictors = function(data, filterRegex, validationRatio) {
   #additional data based on accounts
   data$accounts$add_donated.2013 = sapply((data$accounts$amount.donated.2013 > 0), as.numeric)
   data$accounts$add_no.donations.lifetime.if.donated.2013 = data$accounts$add_donated.2013 * data$accounts$no.donations.lifetime
-
+  
   #avg donation
   data$accounts$add_avg.donation = ifelse(data$accounts$no.donations.lifetime==0, 0, data$accounts$amount.donated.lifetime / data$accounts$no.donations.lifetime)
   #avg donation if donated last year
@@ -83,13 +83,13 @@ preparePredictors = function(data, filterRegex, validationRatio) {
   
   data$concert[2:34] = sapply(data$concert[2:34], as.numeric) 
   concertLong = melt(data$concert, id='season')
-
+  
   data$tickets[3:5] = sapply(data$tickets[3:5], as.numeric) 
-
+  
   
   ticketsLong = melt(data$tickets, id=c("account.id", "season", "set"))
   ticketsLong$prefix = rep("add", nrow(ticketsLong))
-    
+  
   ticketsWide = dcast(ticketsLong, account.id~prefix+variable+season+set, value.var="value")
   
   ticketsPerSeason = dcast(data$tickets[1:3], account.id~season, value.var = "set", fun.aggregate = length)
@@ -97,7 +97,7 @@ preparePredictors = function(data, filterRegex, validationRatio) {
   
   seatsPerSeason = dcast(data$tickets[c(1,2,5)], account.id~season, value.var = "no.seats", fun.aggregate = sum)
   colnames(seatsPerSeason)[2:5] = c("add_tickets_seats_2010_2011", "add_tickets_seats_2011_2012", "add_tickets_seats_2012_2013", "add_tickets_seats_2013_2014") 
-
+  
   #########################
   # parsing concerts table#
   #########################
@@ -117,7 +117,7 @@ preparePredictors = function(data, filterRegex, validationRatio) {
   
   #comment that line if you don't want to multiply by number of subscriptions bought that year
   totalPerAccountWithConcerts[4:36] = totalPerAccountWithConcerts[4:36] * totalPerAccountWithConcerts$total
-
+  
   missedPerAccountWithConcerts = totalPerAccountWithConcerts
   missedPerAccountWithConcerts[4:36] = missedPerAccountWithConcerts[4:36] * invertedTotal
   
@@ -127,7 +127,7 @@ preparePredictors = function(data, filterRegex, validationRatio) {
   
   accountsPreferences = melt(totalPerAccountWithConcerts, id = c("account.id", "season"))
   accountsPreferences = dcast(accountsPreferences, account.id~variable, value.var="value", fun.aggregate = sum)
-
+  
   #adjusting for number of concerts in 2014 - should we filter only to those that will be played in 2014-2015?
   #accountsPreferencesAdjustedTo2014Concerts = accountsPreferences[,c("account.id", "BACH", "HANDEL", "TELEMAN", "JOHANN", "VIVALDI", "HAYDN", "ROSSINI")]
   #accountsPreferencesAdjustedTo2014Concerts = accountsPreferences
@@ -163,7 +163,7 @@ preparePredictors = function(data, filterRegex, validationRatio) {
   subsTrainWide = merge(subsTrainWide, accountsPreferencesAdjustedTo2014Concerts, by = "account.id", all.x = TRUE)
   subsTrainWide = merge(subsTrainWide, missedPerAccountConcertsAdjustedTo2014Concerts, by = "account.id", all.x = TRUE)
   subsTrainWide[is.na(subsTrainWide)] = 0
-
+  
   # factors...
   factorsSubsTrain = data$subscriptionsFactors[which(data$subscriptionsFactors$season != "2014-2015"),]
   factorsSubsTrainLong = melt(factorsSubsTrain,id=c('account.id','season'))
@@ -174,7 +174,7 @@ preparePredictors = function(data, filterRegex, validationRatio) {
   
   # fixing hyphens in names
   names(subsTrainWide) = sapply(names(subsTrainWide), str_replace, "-", "_")
-
+  
   # post-processing for additional variables based on data  
   subsTrainWide$was.2013_2014.subscription.outside.city = sapply((subsTrainWide$billing.city == subsTrainWide$location_2013_2014) * (subsTrainWide$total_2013_2014 > 0), as.numeric)
   subsTrainWide$was.2013_2014.subscription.outside.city[is.na(subsTrainWide$was.2013_2014.subscription.outside.city)] = 0
@@ -201,7 +201,7 @@ preparePredictors = function(data, filterRegex, validationRatio) {
   # prepare training, test sets, splits
   trainPlusTotal = merge(data$train, subsTrainWide,by="account.id",all.x=TRUE, all.y=FALSE)
   trainPlusTotal[is.na(trainPlusTotal)]=0
-
+  
   validationRowsNums = sample(nrow(trainPlusTotal), nrow(trainPlusTotal)*validationRatio)
   validationRowsNums = sort(validationRowsNums)
   
@@ -216,7 +216,7 @@ preparePredictors = function(data, filterRegex, validationRatio) {
   validationTotal = trainPlusTotal[isValidationRow,]
   validationMinusTotalAndMinusAccountId=validationTotal[3:ncol(validationTotal)]
   correctAnswers = validationTotal$total
-
+  
   trainPlusTotalAndMinusAccountId=trainPlusTotal[2:ncol(trainPlusTotal)]
   
   return (list("testSetAll"=validationTotal, "allSetAll"=trainPlusTotal, "allSet"=trainPlusTotalAndMinusAccountId ,"trainSet"=trainPlusTotalMinusValidationAndMinusAccountId, "testSet"=validationMinusTotalAndMinusAccountId, "testAnswers"=correctAnswers, "predictors"=subsTrainWide))
@@ -225,19 +225,19 @@ preparePredictors = function(data, filterRegex, validationRatio) {
 cleanData = function (data) {
   
   # WARNING: should be done for both data$trainSet and data$allSet !
-
+  
   #high residuals
   
   
   data$trainSet=data$trainSet[!((rownames(data$trainSet)==6031)),]
   data$allSet=data$allSet[!((rownames(data$allSet)==6031)),]
-
+  
   data$trainSet=data$trainSet[!((rownames(data$trainSet)==1472)),]
   data$allSet=data$allSet[!((rownames(data$allSet)==1472)),]
-
+  
   #data$trainSet=data$trainSet[!((rownames(data$trainSet)==1649)),]
   #data$allSet=data$allSet[!((rownames(data$allSet)==1649)),]
-
+  
   #data$trainSet=data$trainSet[!((rownames(data$trainSet)==3736)),]
   #data$allSet=data$allSet[!((rownames(data$allSet)==3736)),]
   
@@ -259,7 +259,7 @@ cleanData = function (data) {
 }
 
 prepareDataToPredict = function(allPredictors) {
-
+  
   test = read.csv('data/test.csv')  
   testMinusTotal= merge(test, allPredictors, by="account.id", all.x=TRUE, all.y=FALSE)
   testMinusTotal[is.na(testMinusTotal)]=0
@@ -273,7 +273,7 @@ prepareDataToPredict = function(allPredictors) {
 }
 
 dumpResponse = function(prefix, accounts, predictions) {
-
+  
   account.id=list()
   total=list()
   for(i in 1:length(accounts)) {
