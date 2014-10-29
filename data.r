@@ -27,6 +27,8 @@ readData = function(useLogTransform) {
   concert_table = read.csv('data/concert_table_set_2014.csv',colClasses='character')
   concert_table = concert_table[, ! (colnames(concert_table) %in% c("concert.name", "who", "what"))]
   
+  # account.billing.zip linked to geo data by account
+  geo = read.csv('data/geo.account.csv',colClasses='character') # MS: improve by geo-coding 2000+ accounts with null zips
   
   return (list("train"=train, "subscriptions"=subscriptions, "accounts"=accounts, "concert"=concert, "tickets"=tickets, "concert_table"=concert_table))
 }
@@ -41,7 +43,12 @@ preparePredictors = function(data, filterRegex, validationRatio) {
   data$accounts$first.donated = sapply(data$accounts$first.donated, as.numeric)
   data$accounts$years.donating = rep(2014, length(data$accounts$first.donated))
   data$accounts$years.donating = data$accounts$years.donating - data$accounts$first.donated
-  data$accounts$is.us = sapply(!(data$accounts$billing.zip.code == ""), as.numeric) 
+  data$accounts$is.us = 1 # MS: tag foreign accounts by billing.zip.code
+  for (i in 1:dim(data$accounts)[1]){
+    if(str_detect(data$accounts[i, 3], "[A-Z]|[a-z]")){
+      data$accounts$is.us[i] <- 0
+    }
+  }
   
   for(cat in catVar) {
     data$accounts[,cat] = normalizeStrings(data$accounts[,cat])
