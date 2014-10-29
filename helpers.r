@@ -121,7 +121,8 @@ evaluateModel = function(predictions, correctAnswers, useLogTransform) {
 }
 
 normalizeStrings = function (data) {
-  tmp = sapply(data, tolower)
+  tmp = iconv(data,"WINDOWS-1252","UTF-8")
+  tmp = sapply(tmp, tolower)
   tmp = sapply(tmp, str_trim)
   return (tmp)
 }
