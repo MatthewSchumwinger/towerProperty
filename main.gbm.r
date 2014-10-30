@@ -12,13 +12,13 @@ library(gbm)
 setConfigForMyEnvironment() # special helper function for Matt's environment
 
 validationRatio = 0.15
-filter = "199|200|price|add_no|MOZART|ROSSINI|conc_missed|add_tickets|section_2013_2014|add_donated.2013|multiple.subs|package|billing.city|section" 
+filter = "199|200|price|add_no|MOZART|ROSSINI|conc_missed|add_tickets|section_2013_2014|add_donated.2013|multiple.subs|package|billing.city|section|location|State|City" 
 
 useLogTransform = FALSE 
 trees = 4000 
 bagfrac = 0.5 
 shrinkage = .001
-depth = 8
+depth = 6
 
 includeLibraries()
 rawData = readData(useLogTransform)
