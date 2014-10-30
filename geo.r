@@ -73,13 +73,20 @@ geo = read.csv('data/geo.account.csv',colClasses='character')
 rawData$geo <- geo
 data <- rawData
 
+catGeo <- c("State", "City") # categorical variables
+numGeo <- c("Lat", "Long") # numeric variables
+data$geoFactors = data$geo[, c("account.id", catGeo)]
+data$geoFactors[catGeo] = sapply(data$geoFactors[catGeo], as.factor) 
+data$geoNum = data$geo[, c("account.id", numGeo)]
+
+
 data$accounts$geo.state = "" # MS: add state predictor
 states = data$geo[, c("account.id", "State")]
 data$accounts$geo.state = merge(data$accounts, states, by="account.id", all.x=T) # MS: pull in state from zip code merge
 
 
 
-
+numGeo <- c("Lat", "Lon")
 
 
 

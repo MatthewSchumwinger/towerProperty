@@ -89,9 +89,10 @@ preparePredictors = function(data, filterRegex, validationRatio) {
   
   # bring in geo predictors
   catGeo <- c("State", "City") # categorical variables
-  #numVar <- c("Lat", "Lon") # numeric variables
+  numGeo <- c("Lat", "Long") # numeric variables
   data$geoFactors = data$geo[, c("account.id", catGeo)]
   data$geoFactors[catGeo] = sapply(data$geoFactors[catGeo], as.factor) 
+  data$geoNum = data$geo[, c("account.id", numGeo)]
 
   data$concert[2:34] = sapply(data$concert[2:34], as.numeric) 
   concertLong = melt(data$concert, id='season')
@@ -174,6 +175,7 @@ preparePredictors = function(data, filterRegex, validationRatio) {
   subsTrainWide = merge(subsTrainWide, ticketsWide, by = "account.id", all.x = TRUE)
   subsTrainWide = merge(subsTrainWide, accountsPreferencesAdjustedTo2014Concerts, by = "account.id", all.x = TRUE)
   subsTrainWide = merge(subsTrainWide, missedPerAccountConcertsAdjustedTo2014Concerts, by = "account.id", all.x = TRUE)
+  subsTrainWide = merge(subsTrainWide, data$geoNum, by = "account.id", all.x = TRUE) # MS: add lat lon
   subsTrainWide[is.na(subsTrainWide)] = 0
 
   # factors...
@@ -184,7 +186,7 @@ preparePredictors = function(data, filterRegex, validationRatio) {
   subsTrainWide = merge(subsTrainWide, factorsSubsTrainWide, by = "account.id", all.x = TRUE) 
   subsTrainWide = merge(subsTrainWide, data$accountsFactor, by = "account.id", all.x = TRUE) 
   
-  subsTrainWide = merge(subsTrainWide, data$geoFactors, by = "account.id", all.x = TRUE) # MS: add state
+  subsTrainWide = merge(subsTrainWide, data$geoFactors, by = "account.id", all.x = TRUE) # MS: add state, city
   
   # fixing hyphens in names
   names(subsTrainWide) = sapply(names(subsTrainWide), str_replace, "-", "_")
