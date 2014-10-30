@@ -67,3 +67,23 @@ geo.list <- as.data.frame(table(geo[,2]))
 names(geo.list) <- c("geo", "count")
 write.csv(geo.list, "data/billing.geo.csv", row.names=F)
 
+
+
+geo = read.csv('data/geo.account.csv',colClasses='character')
+rawData$geo <- geo
+data <- rawData
+
+data$accounts$geo.state = "" # MS: add state predictor
+states = data$geo[, c("account.id", "State")]
+data$accounts$geo.state = merge(data$accounts, states, by="account.id", all.x=T) # MS: pull in state from zip code merge
+
+
+
+
+
+
+
+
+
+
+

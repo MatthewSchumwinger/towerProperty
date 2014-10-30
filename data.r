@@ -30,7 +30,7 @@ readData = function(useLogTransform) {
   # account.billing.zip linked to geo data by account
   geo = read.csv('data/geo.account.csv',colClasses='character') # MS: improve by geo-coding 2000+ accounts with null zips
   
-  return (list("train"=train, "subscriptions"=subscriptions, "accounts"=accounts, "concert"=concert, "tickets"=tickets, "concert_table"=concert_table))
+  return (list("train"=train, "subscriptions"=subscriptions, "accounts"=accounts, "concert"=concert, "tickets"=tickets, "concert_table"=concert_table, "geo"=geo))
 }
 
 preparePredictors = function(data, filterRegex, validationRatio) {
@@ -49,7 +49,7 @@ preparePredictors = function(data, filterRegex, validationRatio) {
       data$accounts$is.us[i] <- 0
     }
   }
-  
+
   for(cat in catVar) {
     data$accounts[,cat] = normalizeStrings(data$accounts[,cat])
   }
@@ -87,7 +87,12 @@ preparePredictors = function(data, filterRegex, validationRatio) {
   data$subscriptions[,numVar] <- apply(data$subscriptions[, numVar], 2, function(x){replace(x, is.na(x), 0)}) #3534 NAs in $price.level changed to 0
   data$subscriptions[numVar] = sapply(data$subscriptions[numVar], as.numeric)
   
-  
+  # bring in geo predictors
+  catGeo <- c("State", "City") # categorical variables
+  #numVar <- c("Lat", "Lon") # numeric variables
+  data$geoFactors = data$geo[, c("account.id", catGeo)]
+  data$geoFactors[catGeo] = sapply(data$geoFactors[catGeo], as.factor) 
+
   data$concert[2:34] = sapply(data$concert[2:34], as.numeric) 
   concertLong = melt(data$concert, id='season')
 
@@ -178,6 +183,8 @@ preparePredictors = function(data, filterRegex, validationRatio) {
   
   subsTrainWide = merge(subsTrainWide, factorsSubsTrainWide, by = "account.id", all.x = TRUE) 
   subsTrainWide = merge(subsTrainWide, data$accountsFactor, by = "account.id", all.x = TRUE) 
+  
+  subsTrainWide = merge(subsTrainWide, data$geoFactors, by = "account.id", all.x = TRUE) # MS: add state
   
   # fixing hyphens in names
   names(subsTrainWide) = sapply(names(subsTrainWide), str_replace, "-", "_")

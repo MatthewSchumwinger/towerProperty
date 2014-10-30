@@ -17,8 +17,8 @@ filter = "199|200|price|add_no|MOZART|ROSSINI|conc_missed|add_tickets|section_20
 useLogTransform = FALSE 
 trees = 4000 
 bagfrac = 0.5 
-shrinkage = 0.001
-depth = 6
+shrinkage = .001
+depth = 8
 
 includeLibraries()
 rawData = readData(useLogTransform)
@@ -78,4 +78,4 @@ if(useLogTransform) {
   predictions = exp(predictions)-1
 }
 
-dumpResponse("ML_gbm_sub", predictSet$accounts, predictions)
+dumpResponse("MS_gbm_sub", predictSet$accounts, predictions)
