@@ -12,12 +12,12 @@ library(gbm)
 setConfigForMyEnvironment() # special helper function for Matt's environment
 
 validationRatio = 0.15
-filter = "199|200|price|add_no|MOZART|ROSSINI|conc_missed|add_tickets|section_2013_2014|add_donated.2013|multiple.subs|package|billing.city|section|location|State|City" 
+filter = "199|200|2010|price|add_no|TELEMAN|JOHANN|PERGOLESI|HAYDN|VIVALDI|CORELLI|MOZART|ROSSINI|add_tickets|section_2013_2014|add_donated.2013|multiple.subs|package|billing.city|section|is.us|relationship|outside|City|State|Lat|Long" 
 
 useLogTransform = FALSE 
-trees = 4000 
+trees = 3500 
 bagfrac = 0.5 
-shrinkage = .001
+shrinkage = 0.001
 depth = 6
 
 includeLibraries()

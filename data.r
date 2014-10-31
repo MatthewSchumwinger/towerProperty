@@ -29,8 +29,10 @@ readData = function(useLogTransform) {
   
   # account.billing.zip linked to geo data by account
   geo = read.csv('data/geo.account.csv',colClasses='character') # MS: improve by geo-coding 2000+ accounts with null zips
+
+  attended = read.csv('data/attended.csv',colClasses='character')
   
-  return (list("train"=train, "subscriptions"=subscriptions, "accounts"=accounts, "concert"=concert, "tickets"=tickets, "concert_table"=concert_table, "geo"=geo))
+  return (list("train"=train, "subscriptions"=subscriptions, "accounts"=accounts, "concert"=concert, "tickets"=tickets, "concert_table"=concert_table, "geo"=geo, "attended"=attended))
 }
 
 preparePredictors = function(data, filterRegex, validationRatio) {
@@ -124,19 +126,21 @@ preparePredictors = function(data, filterRegex, validationRatio) {
   totalPerAccount = data$subscriptions[which(data$subscriptions$season != "2014-2015"),]
   totalPerAccount = totalPerAccount[,c("account.id", "total", "season")]
   invertedTotal = sapply(totalPerAccount$total == 0, as.numeric)
+
+  colnames(data$attended) = c("account.id", "2010-2011", "2011-2012", "2012-2013", "2013-2014")
+  attendence = melt(data$attended, id = c("account.id"))
+  colnames(attendence) = c("account.id", "season", "attended")
+  missed = attendence[which(attendence$attended == 0),c("account.id", "season")]
   
   #select either concertsInSeasonsWithFreq or concertsInSeasonsWithoutFreq for weighted on unweighted version
-  totalPerAccountWithConcerts = merge(totalPerAccount, concertsInSeasonsWithFreq, by="season")
+  totalPerAccountWithConcerts = merge(totalPerAccount, concertsInSeasonsWithFreq, by="season", all.x=TRUE)
+  missedPerAccountWithConcerts = merge(missed, concertsInSeasonsWithFreq, by="season", all.x=TRUE)
   
   #comment that line if you don't want to multiply by number of subscriptions bought that year
   totalPerAccountWithConcerts[4:36] = totalPerAccountWithConcerts[4:36] * totalPerAccountWithConcerts$total
-
-  missedPerAccountWithConcerts = totalPerAccountWithConcerts
-  missedPerAccountWithConcerts[4:36] = missedPerAccountWithConcerts[4:36] * invertedTotal
   
   # removing total variable as it is no longer needed
   totalPerAccountWithConcerts = totalPerAccountWithConcerts[,-3]
-  missedPerAccountWithConcerts = missedPerAccountWithConcerts[,-3]
   
   accountsPreferences = melt(totalPerAccountWithConcerts, id = c("account.id", "season"))
   accountsPreferences = dcast(accountsPreferences, account.id~variable, value.var="value", fun.aggregate = sum)
@@ -154,11 +158,11 @@ preparePredictors = function(data, filterRegex, validationRatio) {
   accountsMissedPreferences = melt(missedPerAccountWithConcerts, id = c("account.id", "season"))
   accountsMissedPreferences = dcast(accountsMissedPreferences, account.id~variable, value.var="value", fun.aggregate = sum)
   
-  missedPerAccountConcertsAdjustedTo2014Concerts = accountsMissedPreferences[,c("account.id", "BACH", "HANDEL", "TELEMAN", "JOHANN", "VIVALDI", "HAYDN", "ROSSINI")]
+  missedPerAccountConcertsAdjustedTo2014Concerts = accountsMissedPreferences[,c("account.id", "BACH", "HANDEL", "TELEMAN", "JOHANN", "VIVALDI", "HAYDN", "ROSSINI", "CORELLI", "PERGOLESI", "MOZART")]
   # should we inflate that by times the concert is happening in 2014?
   colnum = ncol(missedPerAccountConcertsAdjustedTo2014Concerts)
   colnames(missedPerAccountConcertsAdjustedTo2014Concerts)[2:colnum] = paste("conc_missed", colnames(missedPerAccountConcertsAdjustedTo2014Concerts)[2:colnum], sep = "_")
-  missedPerAccountConcertsAdjustedTo2014Concerts[2:colnum] = sapply(missedPerAccountConcertsAdjustedTo2014Concerts[2:colnum], as.numeric) 
+  missedPerAccountConcertsAdjustedTo2014Concerts[2:colnum] = sapply(missedPerAccountConcertsAdjustedTo2014Concerts[2:colnum], as.numeric)
   
   #############################
   # end parsing concerts table#
