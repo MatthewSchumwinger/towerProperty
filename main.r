@@ -15,7 +15,7 @@ includeLibraries()
 
 useLogTransform = FALSE
 validationRatio = 0.15
-filter = "199|200|add_"
+filter = "199|200|seats|add_" 
 
 rawData = readData(useLogTransform)
 
