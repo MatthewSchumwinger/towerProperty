@@ -26,7 +26,7 @@ trees = 3000
 bagfrac = 0.5 
 shrinkage = 0.001
 depth = 6
-folds = 10
+numfolds = 10
 
 includeLibraries()
 rawData = readData(useLogTransform)
@@ -38,14 +38,14 @@ formula = prepareFormula(useLogTransform)
 #seeds = c(234294, 340549, 879138, 188231, 646946, 160318, 853181, 551724, 398728, 323126)
 
 set.seed(551724)
-folds = sample(1:folds, nrow(allData$allSet), replace=T)
+folds = sample(1:numfolds, nrow(allData$allSet), replace=T)
 
 predictors = preparePredictors(rawData, filter)
 
 testError = 0
 testErrorInact = 0
 testErrorVar = 0
-for(i in 1:folds) {
+for(i in 1:numfolds) {
   
   #set.seed(seed)
   data = prepareSplits(rawData, predictors, which(folds == i))
@@ -71,7 +71,7 @@ for(i in 1:folds) {
 }
 
 #tries = length(seeds)
-tries = folds
+tries = numfolds
 print(paste("Final test error raw prediction=", testError / tries, " based on ", tries, " tries"))
 print(paste("Final test error with inactive adj=", testErrorInact / tries, " based on ", tries, " tries"))
 print(paste("Final test error with no variance adj =", testErrorVar / tries, " based on ", tries, " tries"))
