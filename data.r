@@ -35,7 +35,7 @@ readData = function(useLogTransform) {
   return (list("train"=train, "subscriptions"=subscriptions, "accounts"=accounts, "concert"=concert, "tickets"=tickets, "concert_table"=concert_table, "geo"=geo, "attended"=attended))
 }
 
-preparePredictors = function(data, filterRegex, validationRatio) {
+preparePredictors = function(data, filterRegex) {
   
   numVar = c("amount.donated.2013", "amount.donated.lifetime", "no.donations.lifetime", "years.donating", "is.us")
   catVar = c("billing.city", "relationship")
@@ -146,9 +146,9 @@ preparePredictors = function(data, filterRegex, validationRatio) {
   accountsPreferences = dcast(accountsPreferences, account.id~variable, value.var="value", fun.aggregate = sum)
 
   #adjusting for number of concerts in 2014 - should we filter only to those that will be played in 2014-2015?
-  #accountsPreferencesAdjustedTo2014Concerts = accountsPreferences[,c("account.id", "BACH", "HANDEL", "TELEMAN", "JOHANN", "VIVALDI", "HAYDN", "ROSSINI")]
+  accountsPreferencesAdjustedTo2014Concerts = accountsPreferences[,c("account.id", "BACH", "HANDEL", "TELEMAN", "JOHANN", "VIVALDI", "HAYDN", "ROSSINI")]
   #accountsPreferencesAdjustedTo2014Concerts = accountsPreferences
-  accountsPreferencesAdjustedTo2014Concerts = accountsPreferences[,c("account.id", "BACH", "HANDEL", "TELEMAN", "JOHANN", "VIVALDI", "HAYDN", "ROSSINI", "CORELLI", "PERGOLESI", "MOZART")]
+  #accountsPreferencesAdjustedTo2014Concerts = accountsPreferences[,c("account.id", "BACH", "HANDEL", "TELEMAN", "JOHANN", "VIVALDI", "HAYDN", "ROSSINI", "CORELLI", "PERGOLESI", "MOZART")]
   
   colnum = ncol(accountsPreferencesAdjustedTo2014Concerts)
   colnames(accountsPreferencesAdjustedTo2014Concerts)[2:colnum] = paste("conc", colnames(accountsPreferencesAdjustedTo2014Concerts)[2:colnum], sep = "_")
@@ -208,6 +208,11 @@ preparePredictors = function(data, filterRegex, validationRatio) {
   subsTrainWide$was.2010_2011.subscription.outside.city = sapply((subsTrainWide$billing.city == subsTrainWide$location_2010_2011) * (subsTrainWide$total_2010_2011 > 0), as.numeric)
   subsTrainWide$was.2010_2011.subscription.outside.city[is.na(subsTrainWide$was.2010_2011.subscription.outside.city)] = 0
   
+  subsTrainWide$adjusted.total.2010_2011 = subsTrainWide$total_2010_2011 + (subsTrainWide$add_tickets_total_2010_2011)
+  subsTrainWide$adjusted.total.2011_2012 = subsTrainWide$total_2011_2012 + (subsTrainWide$add_tickets_total_2011_2012)
+  subsTrainWide$adjusted.total.2012_2013 = subsTrainWide$total_2012_2013 + (subsTrainWide$add_tickets_total_2012_2013)
+  subsTrainWide$adjusted.total.2013_2014 = subsTrainWide$total_2013_2014 + (subsTrainWide$add_tickets_total_2013_2014)
+  
   # fixing character columns to factors
   i <- sapply(subsTrainWide, is.character)
   i[c("account.id")] = FALSE
@@ -217,9 +222,13 @@ preparePredictors = function(data, filterRegex, validationRatio) {
   if(nchar(filterRegex) > 0) {
     subsTrainWide = subsTrainWide[,-grep(filterRegex, colnames(subsTrainWide))]
   }
-  
+
+  return (subsTrainWide)
+}
+
+prepareSplits = function(data, predictors, validationRatio) {
   # prepare training, test sets, splits
-  trainPlusTotal = merge(data$train, subsTrainWide,by="account.id",all.x=TRUE, all.y=FALSE)
+  trainPlusTotal = merge(data$train, predictors,by="account.id",all.x=TRUE, all.y=FALSE)
   trainPlusTotal[is.na(trainPlusTotal)]=0
 
   validationRowsNums = sample(nrow(trainPlusTotal), nrow(trainPlusTotal)*validationRatio)
@@ -239,7 +248,7 @@ preparePredictors = function(data, filterRegex, validationRatio) {
 
   trainPlusTotalAndMinusAccountId=trainPlusTotal[2:ncol(trainPlusTotal)]
   
-  return (list("testSetAll"=validationTotal, "allSetAll"=trainPlusTotal, "allSet"=trainPlusTotalAndMinusAccountId ,"trainSet"=trainPlusTotalMinusValidationAndMinusAccountId, "testSet"=validationMinusTotalAndMinusAccountId, "testAnswers"=correctAnswers, "predictors"=subsTrainWide))
+  return (list("testSetAll"=validationTotal, "allSetAll"=trainPlusTotal, "allSet"=trainPlusTotalAndMinusAccountId ,"trainSet"=trainPlusTotalMinusValidationAndMinusAccountId, "testAccounts"= validationTotal$account.id, "testSet"=validationMinusTotalAndMinusAccountId, "testAnswers"=correctAnswers, "predictors"=predictors))
 }
 
 cleanData = function (data) {
@@ -289,7 +298,7 @@ prepareDataToPredict = function(allPredictors) {
   accounts=testMinusTotal$account.id;
   accounts=sapply(accounts, as.character)
   
-  return (list("testSet"= testMinusTotalAndAccountId, "accounts" = accounts))
+  return (list("testSet"= testMinusTotalAndAccountId, "accounts" = accounts, "testSetAll"=testMinusTotal))
 }
 
 dumpResponse = function(prefix, accounts, predictions) {

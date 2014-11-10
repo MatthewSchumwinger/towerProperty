@@ -11,11 +11,18 @@ library(gbm)
 
 setConfigForMyEnvironment() # special helper function for Matt's environment
 
+
+filter = "" 
+rawData = readData(FALSE)
+allPredictors = preparePredictors(rawData, filter)
+allData = prepareSplits(rawData, allPredictors, 0.15)
+
 validationRatio = 0.15
-filter = "199|200|2010|price|add_no|TELEMAN|JOHANN|PERGOLESI|HAYDN|VIVALDI|CORELLI|MOZART|ROSSINI|add_tickets|section_2013_2014|add_donated.2013|multiple.subs|package|billing.city|section|is.us|relationship|outside|City|State|Lat|Long" 
+#VIVALDI|HAYDN|HANDEL
+filter = "199|200|2010|2011|price.level|add_no|TELEMAN|JOHANN|ROSSINI|conc_missed|add_price|add_tickets|add_tickets_seats|section_2013_2014|multiple.subs|billing.city|is.us|relationship|outside|City|State|Lat|Long" 
 
 useLogTransform = FALSE 
-trees = 3500 
+trees = 2500 
 bagfrac = 0.5 
 shrinkage = 0.001
 depth = 6
@@ -29,11 +36,15 @@ formula = prepareFormula(useLogTransform)
 
 seeds = c(234294, 340549, 879138, 188231, 646946, 160318, 853181, 551724, 398728, 323126)
 
+predictors = preparePredictors(rawData, filter)
+
 testError = 0
+testErrorInact = 0
+testErrorVar = 0
 for(seed in seeds) {
   
   set.seed(seed)
-  data = preparePredictors(rawData, filter, validationRatio)
+  data = prepareSplits(rawData, predictors, validationRatio)
 #  data = cleanData(data)
 
   gbm.orch = gbm(formula, data = data$trainSet, distribution = "gaussian", 
@@ -41,15 +52,27 @@ for(seed in seeds) {
   
   summary(gbm.orch)
   gbm.boost = predict(gbm.orch , newdata=data$testSet, n.trees=trees)
-  
+
   testError = testError + evaluateModel(gbm.boost, data$testAnswers, useLogTransform)
-  
+
+  print("Adjusting for inactive")
+  adjusted = adjustPredictionsInactive(gbm.boost, data.frame("account.id"=data$testAccounts), allData$predictors)
+  testErrorInact = testErrorInact + evaluateModel(adjusted, data$testAnswers, useLogTransform)
+
+  print("Adjusting for invariance")
+  adjusted2 = adjustPredictionsInvariant(gbm.boost, data.frame("account.id"=data$testAccounts), allData$predictors)
+  testErrorVar = testErrorVar + evaluateModel(adjusted2, data$testAnswers, useLogTransform)
+
 }
 
 tries = length(seeds)
 print(paste("Final test error=", testError / tries, " based on ", tries, " tries"))
-summary(gbm.orch)
+print(paste("Final test error with inactive adj=", testErrorInact / tries, " based on ", tries, " tries"))
+print(paste("Final test error with no variance adj =", testErrorVar / tries, " based on ", tries, " tries"))
 
+
+
+summary(gbm.orch)
 
 #deep check
 for(i in 1:length(data$testAnswers)) {
@@ -61,7 +84,7 @@ for(i in 1:length(data$testAnswers)) {
   } 
 }  
 
-print(data$allSetAll["306",])
+print(data$allSetAll["5905",])
 print(data$trainAccountsId[1487,1])
 dim(data$trainAccountsId)
 
@@ -72,10 +95,14 @@ gbm.orch = gbm(formula, data=data$allSet,distribution="gaussian",
 summary(gbm.orch)
 
 predictSet = prepareDataToPredict(data$predictors)
+predictSetAll = prepareDataToPredict(allData$predictors)
 predictions = predict(gbm.orch, newdata=predictSet$testSet, n.trees=trees)
+
+predictions = adjustPredictionsInactive(predictions, data.frame("account.id"=predictSet$accounts), 
+                                predictSetAll$testSetAll)
 
 if(useLogTransform) {
   predictions = exp(predictions)-1
 }
 
-dumpResponse("MS_gbm_sub", predictSet$accounts, predictions)
+dumpResponse("ML_gbm_sub", predictSet$accounts, predictions)
