@@ -15,17 +15,18 @@ setConfigForMyEnvironment() # special helper function for Matt's environment
 filter = "" 
 rawData = readData(FALSE)
 allPredictors = preparePredictors(rawData, filter)
-allData = prepareSplits(rawData, allPredictors, 0.15)
+allData = prepareSplits(rawData, allPredictors, c(0))
 
-validationRatio = 0.15
+#validationRatio = 0.15
 #VIVALDI|HAYDN|HANDEL
-filter = "199|200|2010|2011|price.level|add_no|TELEMAN|JOHANN|ROSSINI|conc_missed|add_price|add_tickets|add_tickets_seats|section_2013_2014|multiple.subs|billing.city|is.us|relationship|outside|City|State|Lat|Long" 
+filter = "199|200|2010|price.level|add_no|TELEMAN|JOHANN|ROSSINI|conc_missed|add_price|add_tickets|add_tickets_seats|section_2013_2014|multiple.subs|billing.city|is.us|relationship|outside|City|State|Lat|Long" 
 
 useLogTransform = FALSE 
-trees = 2500 
+trees = 3000 
 bagfrac = 0.5 
 shrinkage = 0.001
 depth = 6
+folds = 10
 
 includeLibraries()
 rawData = readData(useLogTransform)
@@ -34,18 +35,21 @@ rawData = readData(useLogTransform)
 polyOrder = 2
 formula = prepareFormula(useLogTransform)
 
-seeds = c(234294, 340549, 879138, 188231, 646946, 160318, 853181, 551724, 398728, 323126)
+#seeds = c(234294, 340549, 879138, 188231, 646946, 160318, 853181, 551724, 398728, 323126)
+
+set.seed(551724)
+folds = sample(1:folds, nrow(allData$allSet), replace=T)
 
 predictors = preparePredictors(rawData, filter)
 
 testError = 0
 testErrorInact = 0
 testErrorVar = 0
-for(seed in seeds) {
+for(i in 1:folds) {
   
-  set.seed(seed)
-  data = prepareSplits(rawData, predictors, validationRatio)
-#  data = cleanData(data)
+  #set.seed(seed)
+  data = prepareSplits(rawData, predictors, which(folds == i))
+  # data = cleanData(data)
 
   gbm.orch = gbm(formula, data = data$trainSet, distribution = "gaussian", 
                  bag.fraction = bagfrac, shrinkage = shrinkage, n.trees = trees, interaction.depth = depth)
@@ -53,6 +57,7 @@ for(seed in seeds) {
   summary(gbm.orch)
   gbm.boost = predict(gbm.orch , newdata=data$testSet, n.trees=trees)
 
+  print("Raw prediction")
   testError = testError + evaluateModel(gbm.boost, data$testAnswers, useLogTransform)
 
   print("Adjusting for inactive")
@@ -65,8 +70,9 @@ for(seed in seeds) {
 
 }
 
-tries = length(seeds)
-print(paste("Final test error=", testError / tries, " based on ", tries, " tries"))
+#tries = length(seeds)
+tries = folds
+print(paste("Final test error raw prediction=", testError / tries, " based on ", tries, " tries"))
 print(paste("Final test error with inactive adj=", testErrorInact / tries, " based on ", tries, " tries"))
 print(paste("Final test error with no variance adj =", testErrorVar / tries, " based on ", tries, " tries"))
 

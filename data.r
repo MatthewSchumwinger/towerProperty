@@ -226,16 +226,16 @@ preparePredictors = function(data, filterRegex) {
   return (subsTrainWide)
 }
 
-prepareSplits = function(data, predictors, validationRatio) {
+prepareSplits = function(data, predictors, validationRowsNums) {
   # prepare training, test sets, splits
   trainPlusTotal = merge(data$train, predictors,by="account.id",all.x=TRUE, all.y=FALSE)
   trainPlusTotal[is.na(trainPlusTotal)]=0
 
-  validationRowsNums = sample(nrow(trainPlusTotal), nrow(trainPlusTotal)*validationRatio)
+  #validationRowsNums = seq(i, nrow(trainPlusTotal), 10)
   validationRowsNums = sort(validationRowsNums)
   
   isValidationRow=rep(FALSE, nrow(trainPlusTotal))
-  for(i in seq(1, nrow(trainPlusTotal))) {
+  for(i in seq(1, length(validationRowsNums))) {
     isValidationRow[validationRowsNums[i]]=TRUE  
   }
   
