@@ -11,6 +11,7 @@ library(gbm)
 
 setConfigForMyEnvironment() # special helper function for Matt's environment
 
+<<<<<<< Updated upstream
 
 filter = "" 
 rawData = readData(FALSE)
@@ -20,6 +21,10 @@ allData = prepareSplits(rawData, allPredictors, c(0))
 #validationRatio = 0.15
 #VIVALDI|HAYDN|HANDEL
 filter = "199|200|2010|price.level|add_no|TELEMAN|JOHANN|ROSSINI|conc_missed|add_price|add_tickets|add_tickets_seats|section_2013_2014|multiple.subs|billing.city|is.us|relationship|outside|City|State|Lat|Long" 
+=======
+validationRatio = 0.15
+filter = "199|200|price|add_no|MOZART|ROSSINI|conc_missed|add_tickets|section_2013_2014|add_donated.2013|multiple.subs|package|billing.city|section|location" 
+>>>>>>> Stashed changes
 
 useLogTransform = FALSE 
 trees = 4000 
