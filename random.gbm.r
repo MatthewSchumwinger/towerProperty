@@ -54,6 +54,12 @@ while(TRUE) {
   bagfrac = setBagfrac[sample(1:length(setBagfrac), 1)]
   depth = setDepths[sample(1:length(setDepths), 1)]
 
+  while((trees > 5000) && (depth > 5) && (numTokens < 26))
+  {
+    trees = setTrees[sample(1:length(setTrees), 1)]
+    depth = setDepths[sample(1:length(setDepths), 1)]    
+  }
+  
   print(paste("filter=", filter))
   print(paste("trees=", trees))
   print(paste("bagfrac=", bagfrac))

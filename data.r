@@ -213,6 +213,28 @@ preparePredictors = function(data, filterRegex) {
   subsTrainWide$adjusted.total.2012_2013 = subsTrainWide$total_2012_2013 + (subsTrainWide$add_tickets_total_2012_2013)
   subsTrainWide$adjusted.total.2013_2014 = subsTrainWide$total_2013_2014 + (subsTrainWide$add_tickets_total_2013_2014)
   
+  subsTrainWide$avg.2.years = apply(cbind(subsTrainWide$total_2012_2013, subsTrainWide$total_2013_2014), 1, mean) 
+  subsTrainWide$var.2.years = apply(cbind(subsTrainWide$total_2012_2013, subsTrainWide$total_2013_2014), 1, var)
+  subsTrainWide$avg.3.years = apply(cbind(subsTrainWide$total_2011_2012, subsTrainWide$total_2012_2013, subsTrainWide$total_2013_2014), 1, mean) 
+  subsTrainWide$var.3.years = apply(cbind(subsTrainWide$total_2011_2012, subsTrainWide$total_2012_2013, subsTrainWide$total_2013_2014), 1, var) 
+  subsTrainWide$avg.4.years = apply(cbind(subsTrainWide$total_2010_2011, subsTrainWide$total_2011_2012, subsTrainWide$total_2012_2013, subsTrainWide$total_2013_2014), 1, mean) 
+  subsTrainWide$var.4.years = apply(cbind(subsTrainWide$total_2010_2011, subsTrainWide$total_2011_2012, subsTrainWide$total_2012_2013, subsTrainWide$total_2013_2014), 1, var) 
+  subsTrainWide$avg.5.years = apply(cbind(subsTrainWide$total_2009_2010, subsTrainWide$total_2010_2011, subsTrainWide$total_2011_2012, subsTrainWide$total_2012_2013, subsTrainWide$total_2013_2014), 1, mean) 
+  subsTrainWide$var.5.years = apply(cbind(subsTrainWide$total_2009_2010, subsTrainWide$total_2010_2011, subsTrainWide$total_2011_2012, subsTrainWide$total_2012_2013, subsTrainWide$total_2013_2014), 1, var) 
+  subsTrainWide$avg.6.years = apply(cbind(subsTrainWide$total_2008_2009, subsTrainWide$total_2009_2010, subsTrainWide$total_2010_2011, subsTrainWide$total_2011_2012, subsTrainWide$total_2012_2013, subsTrainWide$total_2013_2014), 1, mean) 
+  subsTrainWide$var.6.years = apply(cbind(subsTrainWide$total_2008_2009, subsTrainWide$total_2009_2010, subsTrainWide$total_2010_2011, subsTrainWide$total_2011_2012, subsTrainWide$total_2012_2013, subsTrainWide$total_2013_2014), 1, var) 
+
+  subsTrainWide$avg.8.years = apply(cbind(subsTrainWide$total_2006_2007, subsTrainWide$total_2007_2008, subsTrainWide$total_2008_2009, subsTrainWide$total_2009_2010, subsTrainWide$total_2010_2011, subsTrainWide$total_2011_2012, subsTrainWide$total_2012_2013, subsTrainWide$total_2013_2014), 1, mean) 
+  subsTrainWide$var.8.years = apply(cbind(subsTrainWide$total_2006_2007, subsTrainWide$total_2007_2008, subsTrainWide$total_2008_2009, subsTrainWide$total_2009_2010, subsTrainWide$total_2010_2011, subsTrainWide$total_2011_2012, subsTrainWide$total_2012_2013, subsTrainWide$total_2013_2014), 1, var) 
+  
+  subsTrainWide$avg.2.years.if.no.var = subsTrainWide$avg.2.years * sapply(subsTrainWide$var.2.years == 0, as.numeric)
+  subsTrainWide$avg.3.years.if.no.var = subsTrainWide$avg.3.years * sapply(subsTrainWide$var.3.years == 0, as.numeric)
+  subsTrainWide$avg.4.years.if.no.var = subsTrainWide$avg.4.years * sapply(subsTrainWide$var.4.years == 0, as.numeric)
+  subsTrainWide$avg.5.years.if.no.var = subsTrainWide$avg.5.years * sapply(subsTrainWide$var.5.years == 0, as.numeric)
+  subsTrainWide$avg.6.years.if.no.var = subsTrainWide$avg.6.years * sapply(subsTrainWide$var.6.years == 0, as.numeric)
+
+  subsTrainWide$avg.8.years.if.no.var = subsTrainWide$avg.8.years * sapply(subsTrainWide$var.8.years == 0, as.numeric)
+  
   # fixing character columns to factors
   i <- sapply(subsTrainWide, is.character)
   i[c("account.id")] = FALSE
