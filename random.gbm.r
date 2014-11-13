@@ -54,7 +54,10 @@ while(TRUE) {
   bagfrac = setBagfrac[sample(1:length(setBagfrac), 1)]
   depth = setDepths[sample(1:length(setDepths), 1)]
 
-  while((trees > 5000) && (depth > 5) && (numTokens < 26))
+  while( ((trees > 5000) && (depth > 5) && (numTokens < 26)) || 
+         ((trees > 6000) && (depth > 3) && (numTokens < 28)) ||
+         ((trees > 8000) && (depth > 2) && (numTokens < 30))
+           )
   {
     trees = setTrees[sample(1:length(setTrees), 1)]
     depth = setDepths[sample(1:length(setDepths), 1)]    
@@ -85,6 +88,11 @@ while(TRUE) {
     print("Raw prediction")
     testError = testError + evaluateModel(gbm.boost, data$testAnswers, useLogTransform)
     
+    if(i == 1 && testError > 0.15)
+    {
+      break;
+    }
+    
     print("Adjusting for inactive")
     adjusted = adjustPredictionsInactive(gbm.boost, data.frame("account.id"=data$testAccounts), allData$predictors)
     testErrorInact = testErrorInact + evaluateModel(adjusted, data$testAnswers, useLogTransform)
@@ -94,24 +102,27 @@ while(TRUE) {
     testErrorVar = testErrorVar + evaluateModel(adjusted2, data$testAnswers, useLogTransform)
   }
   
-  tries = numfolds
-  print(paste("Final test error raw prediction=", testError / tries, " based on ", tries, " tries"))
-  print(paste("Final test error with inactive adj=", testErrorInact / tries, " based on ", tries, " tries"))
-  print(paste("Final test error with no variance adj =", testErrorVar / tries, " based on ", tries, " tries"))
-  
-  data=cbind(filter,trees,bagfrac,shrinkage,depth)
-  threshold = 0.0925
-  
-  if((testError/tries) < threshold) {
-    write.csv(data, paste(testError, "_raw_", format(Sys.time(), "%b_%d_%Y"),".csv", sep=""), row.names = F)  
-  }
-  
-  if((testErrorInact/tries) < threshold) {
-    write.csv(data, paste(testError, "_inact_", format(Sys.time(), "%b_%d_%Y"),".csv", sep=""), row.names = F)  
-  }
-  
-  if((testErrorVar/tries) < threshold) {
-    write.csv(data, paste(testError, "_invar_", format(Sys.time(), "%b_%d_%Y"),".csv", sep=""), row.names = F)  
+  if(i == 10)
+  {
+    tries = numfolds
+    print(paste("Final test error raw prediction=", testError / tries, " based on ", tries, " tries"))
+    print(paste("Final test error with inactive adj=", testErrorInact / tries, " based on ", tries, " tries"))
+    print(paste("Final test error with no variance adj =", testErrorVar / tries, " based on ", tries, " tries"))
+    
+    data=cbind(filter,trees,bagfrac,shrinkage,depth)
+    threshold = 0.094
+    
+    if((testError/tries) < threshold) {
+      write.csv(data, paste(testError, "_raw_", format(Sys.time(), "%b_%d_%Y"),".csv", sep=""), row.names = F)  
+    }
+    
+    if((testErrorInact/tries) < threshold) {
+      write.csv(data, paste(testError, "_inact_", format(Sys.time(), "%b_%d_%Y"),".csv", sep=""), row.names = F)  
+    }
+    
+    if((testErrorVar/tries) < threshold) {
+      write.csv(data, paste(testError, "_invar_", format(Sys.time(), "%b_%d_%Y"),".csv", sep=""), row.names = F)  
+    }
   }
 }
 
