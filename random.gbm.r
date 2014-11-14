@@ -41,6 +41,8 @@ while(TRUE) {
   setShrinkage = c(0.001, 0.001, 0.001, 0.001, 0.0005, 0.002, 0.005, 0.01)
   setBagfrac = c(0.5, 0.5, 0.5, 0.66, 0.4, 0.6)
   setDepths = c(1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 6, 6, 7, 8, 9, 10)
+  setDistrib = c("guassian", "tdist", "laplace")
+  setDF = c(1, 2, 3, 4, 6, 10, 15, 50, 100, 500, 1000)
   
   start_filter = "billing.city|section_2013_2014"
 
@@ -53,7 +55,10 @@ while(TRUE) {
   shrinkage = setShrinkage[sample(1:length(setShrinkage), 1)]
   bagfrac = setBagfrac[sample(1:length(setBagfrac), 1)]
   depth = setDepths[sample(1:length(setDepths), 1)]
-
+  distrib = setDistrib[sample(1:length(setDistrib), 1)]
+  df = setDF[sample(1:length(setDF), 1)]
+  
+  
   while( ((trees > 5000) && (depth > 5) && (numTokens < 26)) || 
          ((trees > 6000) && (depth > 3) && (numTokens < 28)) ||
          ((trees > 8000) && (depth > 2) && (numTokens < 30))
@@ -67,6 +72,8 @@ while(TRUE) {
   print(paste("trees=", trees))
   print(paste("bagfrac=", bagfrac))
   print(paste("depth=", depth))
+  print(paste("distrib=", distrib))
+  print(paste("df=", df))
   
   predictors = preparePredictors(rawData, filter)
   
@@ -78,17 +85,20 @@ while(TRUE) {
     print(paste("Starting fold", i))
     data = prepareSplits(rawData, predictors, which(folds == i))
     # data = cleanData(data)
-    
-    gbm.orch = gbm(formula, data = data$trainSet, distribution = "gaussian", 
+    if(distrib == "tdist") {
+      gbm.orch = gbm(formula, data = data$trainSet, distribution = list(name="tdist", df=df), 
+                     bag.fraction = bagfrac, shrinkage = shrinkage, n.trees = trees, interaction.depth = depth)      
+    } else {
+      gbm.orch = gbm(formula, data = data$trainSet, distribution = distrib, 
                    bag.fraction = bagfrac, shrinkage = shrinkage, n.trees = trees, interaction.depth = depth)
-    
+    }
     summary(gbm.orch)
     gbm.boost = predict(gbm.orch , newdata=data$testSet, n.trees=trees)
     
     print("Raw prediction")
     testError = testError + evaluateModel(gbm.boost, data$testAnswers, useLogTransform)
     
-    if(i == 1 && testError > 0.15)
+    if(i == 1 && testError > 0.12)
     {
       break;
     }
@@ -109,8 +119,8 @@ while(TRUE) {
     print(paste("Final test error with inactive adj=", testErrorInact / tries, " based on ", tries, " tries"))
     print(paste("Final test error with no variance adj =", testErrorVar / tries, " based on ", tries, " tries"))
     
-    data=cbind(filter,trees,bagfrac,shrinkage,depth)
-    threshold = 0.094
+    data=cbind(filter,trees,bagfrac,shrinkage,depth,distrib,df)
+    threshold = 0.0925
     
     if((testError/tries) < threshold) {
       write.csv(data, paste(testError, "_raw_", format(Sys.time(), "%b_%d_%Y"),".csv", sep=""), row.names = F)  
