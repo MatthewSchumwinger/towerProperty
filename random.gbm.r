@@ -41,7 +41,7 @@ while(TRUE) {
   setShrinkage = c(0.001, 0.001, 0.001, 0.001, 0.0005, 0.002, 0.005, 0.01)
   setBagfrac = c(0.5, 0.5, 0.5, 0.66, 0.4, 0.6)
   setDepths = c(1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 6, 6, 7, 8, 9, 10)
-  setDistrib = c("guassian", "tdist", "laplace")
+  setDistrib = c("gaussian", "tdist", "laplace")
   setDF = c(1, 2, 3, 4, 6, 10, 15, 50, 100, 500, 1000)
   
   start_filter = "billing.city|section_2013_2014"
