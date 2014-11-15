@@ -30,7 +30,7 @@ folds = sample(1:numfolds, nrow(allData$allSet), replace=T)
 while(TRUE) {
 
   set.seed(as.numeric(Sys.time()))
-  tokens = c("199", "200", "2000|2001|2002|2003|2004", "2005|2006|2007|2008", "2009", "2010", "2011", "2012", "2013",
+  tokens = c("199", "200", "2000|2001|2002|2003|2004", "2005|2006|2007|2008", "2009", "2010", "2011", "2012",
              "price.level", "add_no", "TELEMAN|JOHANN|ROSSINI",  "HANDEL", "VIVALDI", "HAYDN", "BACH",
              "conc_missed", "add_price", "add_tickets", "add_tickets_seats", "multiple.subs", "is.us", 
              "relationship", "outside", "City", "State", "Lat|Long", 
