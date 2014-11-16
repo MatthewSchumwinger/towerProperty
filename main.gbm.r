@@ -20,10 +20,12 @@ allData = prepareSplits(rawData, allPredictors, c(0))
 
 filter = "199|200|2010|price.level|add_no|TELEMAN|JOHANN|ROSSINI|conc_missed|add_price|add_tickets|add_tickets_seats|section_2013_2014|multiple.subs|billing.city|is.us|relationship|outside|City|State|Lat|Long" 
 useLogTransform = FALSE 
-trees = 3000 
+trees = 500 
 bagfrac = 0.5 
-shrinkage = 0.001
+shrinkage = 0.002
 depth = 4
+distrib = "tdist"
+df = 500
 numfolds = 10
 
 rawData = readData(useLogTransform)
@@ -48,8 +50,13 @@ for(i in 1:numfolds) {
   data = prepareSplits(rawData, predictors, which(folds == i))
   # data = cleanData(data)
 
-  gbm.orch = gbm(formula, data = data$trainSet, distribution = "gaussian", 
-                 bag.fraction = bagfrac, shrinkage = shrinkage, n.trees = trees, interaction.depth = depth)
+  if(distrib == "tdist") {
+    gbm.orch = gbm(formula, data = data$trainSet, distribution = list(name="tdist", df=df), 
+                   bag.fraction = bagfrac, shrinkage = shrinkage, n.trees = trees, interaction.depth = depth)      
+  } else {
+    gbm.orch = gbm(formula, data = data$trainSet, distribution = distrib, 
+                   bag.fraction = bagfrac, shrinkage = shrinkage, n.trees = trees, interaction.depth = depth)
+  }
   
   summary(gbm.orch)
   gbm.boost = predict(gbm.orch , newdata=data$testSet, n.trees=trees)
@@ -92,8 +99,13 @@ print(data$trainAccountsId[1487,1])
 dim(data$trainAccountsId)
 
 
-gbm.orch = gbm(formula, data=data$allSet,distribution="gaussian", 
-               bag.fraction = bagfrac, shrinkage = shrinkage, n.trees = trees, interaction.depth = depth)
+if(distrib == "tdist") {
+  gbm.orch = gbm(formula, data = data=data$allSet, distribution = list(name="tdist", df=df), 
+                 bag.fraction = bagfrac, shrinkage = shrinkage, n.trees = trees, interaction.depth = depth)      
+} else {
+  gbm.orch = gbm(formula, data = data=data$allSet, distribution = distrib, 
+                 bag.fraction = bagfrac, shrinkage = shrinkage, n.trees = trees, interaction.depth = depth)
+}
 
 summary(gbm.orch)
 

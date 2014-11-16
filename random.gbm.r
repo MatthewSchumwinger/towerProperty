@@ -156,7 +156,7 @@ summary(gbm.orch)
 
 
 if(distrib == "tdist") {
-  gbm.orch = gbm(formula, data = data$trainSet, distribution = list(name="tdist", df=df), 
+  gbm.orch = gbm(formula, data = data$allSet, distribution = list(name="tdist", df=df), 
                  bag.fraction = bagfrac, shrinkage = shrinkage, n.trees = trees, interaction.depth = depth)
 } else  {
   gbm.orch = gbm(formula, data=data$allSet,distribution=distrib, 
