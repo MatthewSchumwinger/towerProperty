@@ -51,6 +51,8 @@ while(TRUE) {
 
   filter = paste(c(start_filter, paste(tokens[selected], collapse="|")), collapse="|")
   
+  filter = "199|200|2010|2011|price.level|add_no|TELEMAN|JOHANN|ROSSINI|conc_missed|add_price|add_tickets|add_tickets_seats|section_2013_2014|multiple.subs|billing.city|is.us|relationship|City|State|Lat|Long" 
+  
   trees = setTrees[sample(1:length(setTrees), 1)]
   shrinkage = setShrinkage[sample(1:length(setShrinkage), 1)]
   bagfrac = setBagfrac[sample(1:length(setBagfrac), 1)]
@@ -98,7 +100,7 @@ while(TRUE) {
     print("Raw prediction")
     testError = testError + evaluateModel(gbm.boost, data$testAnswers, useLogTransform)
     
-    if(i == 1 && testError > 0.12)
+    if(i == 1 && testError > 0.108)
     {
       break;
     }
@@ -153,8 +155,13 @@ summary(gbm.orch)
 #dim(data$trainAccountsId)
 
 
-gbm.orch = gbm(formula, data=data$allSet,distribution="gaussian", 
-               bag.fraction = bagfrac, shrinkage = shrinkage, n.trees = trees, interaction.depth = depth)
+if(distrib == "tdist") {
+  gbm.orch = gbm(formula, data = data$trainSet, distribution = list(name="tdist", df=df), 
+                 bag.fraction = bagfrac, shrinkage = shrinkage, n.trees = trees, interaction.depth = depth)
+} else  {
+  gbm.orch = gbm(formula, data=data$allSet,distribution=distrib, 
+                 bag.fraction = bagfrac, shrinkage = shrinkage, n.trees = trees, interaction.depth = depth)
+}
 
 summary(gbm.orch)
 
