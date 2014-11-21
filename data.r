@@ -57,7 +57,9 @@ preparePredictors = function(data, filterRegex) {
   }
     
   data$accounts[numVar] = sapply(data$accounts[numVar], as.numeric) 
-  data$accounts[catVar] = sapply(data$accounts[catVar], as.factor) 
+
+  data$accounts[catVar] = sapply(data$accounts[catVar], addNA) 
+  #data$accounts[catVar] = sapply(data$accounts[catVar], as.factor) 
   
   data$accountsFactor = data$accounts[c("account.id", catVar)]
   data$accounts = data$accounts[c("account.id", numVar)]
@@ -83,7 +85,9 @@ preparePredictors = function(data, filterRegex) {
   
   # only convert NAs to zero for numeric variables
   data$subscriptionsFactors = data$subscriptions[, c("account.id", catVar, "season")]
-  data$subscriptionsFactors[catVar] = sapply(data$subscriptionsFactors[catVar], as.factor) 
+
+  data$subscriptionsFactors[catVar] = sapply(data$subscriptionsFactors[catVar], addNA)
+  #data$subscriptionsFactors[catVar] = sapply(data$subscriptionsFactors[catVar], as.factor) 
   
   data$subscriptions = data$subscriptions[,c("account.id", numVar, "season" )]
   data$subscriptions[,numVar] <- apply(data$subscriptions[, numVar], 2, function(x){replace(x, is.na(x), 0)}) #3534 NAs in $price.level changed to 0
@@ -93,7 +97,8 @@ preparePredictors = function(data, filterRegex) {
   catGeo <- c("State", "City") # categorical variables
   numGeo <- c("Lat", "Long") # numeric variables
   data$geoFactors = data$geo[, c("account.id", catGeo)]
-  data$geoFactors[catGeo] = sapply(data$geoFactors[catGeo], as.factor) 
+  data$geoFactors[catGeo] = sapply(data$geoFactors[catGeo], addNA) 
+  #data$geoFactors[catGeo] = sapply(data$geoFactors[catGeo], as.factor) 
   data$geoNum = data$geo[, c("account.id", numGeo)]
 
   data$concert[2:34] = sapply(data$concert[2:34], as.numeric) 
@@ -238,7 +243,8 @@ preparePredictors = function(data, filterRegex) {
   # fixing character columns to factors
   i <- sapply(subsTrainWide, is.character)
   i[c("account.id")] = FALSE
-  subsTrainWide[i] <- lapply(subsTrainWide[i], as.factor)
+  subsTrainWide[i] <- lapply(subsTrainWide[i], addNA)  
+  #subsTrainWide[i] <- lapply(subsTrainWide[i], as.factor)
   
   # remove filtered data from the set
   if(nchar(filterRegex) > 0) {
