@@ -33,6 +33,7 @@ readData = function(useLogTransform) {
   # account.billing.zip linked to geo data by account
   geo = read.csv('data/geo.account.csv',colClasses='character') # MS: improve by geo-coding 2000+ accounts with null zips
   geo$hotspot[is.na(geo$hotspot)]  = "No" # populate "NAs"
+  geo$hotspot[which(geo$hotspot == "")] = "No"
 
   attended = read.csv('data/attended.csv',colClasses='character')
   
