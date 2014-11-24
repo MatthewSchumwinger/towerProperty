@@ -1,4 +1,5 @@
-## MS script to processing accoun$billing.geo.code
+## MS script to process account$billing.geo.code
+# add "hotspots"
 
 # us no us geos
 # standardize geos
@@ -45,10 +46,16 @@ table(str_length(zipDir[,1]))
 # merge city, state info to geo
 geo <- merge(geo, zipDir, by.x="billing.zip.code", by.y="Zipcode",all.x=T)
 names(geo)
+# merge in hotspots from QGIS
+hot <- read.csv("data/hotspot.csv", as.is=T)
+hot <- hot[,c(4,16)]
+geo <- merge(geo, hot, by="account.id", all.x=T)
+
 
 
 # dump csv with geos for use as categorical predictors
 write.csv(geo, "data/geo.account.csv", row.names=F)
+
 
 ####### ------ old code below ############
 
