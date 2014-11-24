@@ -18,7 +18,7 @@ rawData = readData(FALSE)
 allPredictors = preparePredictors(rawData, filter)
 allData = prepareSplits(rawData, allPredictors, c(0))
 
-filter = "199|200|2010|price.level|add_no|TELEMAN|JOHANN|ROSSINI|conc_missed|add_price|add_tickets|add_tickets_seats|section_2013_2014|multiple.subs|billing.city|is.us|relationship|outside|City|State|Lat|Long|package|section|location|geo" 
+filter = "199|200|2010|price.level|add_no|TELEMAN|JOHANN|ROSSINI|conc_missed|add_price|add_tickets|add_tickets_seats|section_2013_2014|multiple.subs|billing.city|is.us|relationship|outside|City|State|Lat|Long|package|section|location|geo|hotspot" 
 useLogTransform = FALSE 
 kernel="rbfdot"
 sigma=0.001
