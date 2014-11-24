@@ -304,7 +304,7 @@ cleanData = function (data) {
   #data$allSet = data$allSet[sum(c(data$allSet$total_2011_2012, data$allSet$total_2012_2013, data$allSet$total_2013_2014)) != 0, ]
 
   data$trainSet = data$trainSet[abs(data$trainSet$total - data$trainSet$total_2013_2014) <= 2 , ]
-  data$allSet = data$trainSet[abs(data$allSet$total - data$allSet$total_2013_2014) <= 2, ]
+  data$allSet = data$allSet[abs(data$allSet$total - data$allSet$total_2013_2014) <= 2, ]
   
   #data$trainSet=data$trainSet[!((rownames(data$trainSet)==6031)),]
   #data$allSet=data$allSet[!((rownames(data$allSet)==6031)),]
