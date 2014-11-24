@@ -11,9 +11,12 @@ readData = function(useLogTransform) {
   #subscriptions = subscriptions[,c("account.id", "price.level", "no.seats", "total", "season" )]
 
   accounts = read.csv('data/account.csv',colClasses='character') #Kartik added
-  #accounts = accounts[,c("account.id", "amount.donated.2013", "amount.donated.lifetime","no.donations.lifetime")] #Kartik added
+  #accounts = accounts[,c("account.id", "amount.donated.2013", "aamount.donated.lifetime","no.donations.lifetime")] #Kartik added
   # next step "billing.zip.code"
-  
+  for(i in 1:nrow(accounts)) {
+    accounts$account.num[i] = i
+  }
+    
   tickets = read.csv('data/tickets.csv',colClasses='character')
   tickets = tickets[,c("account.id",  "season", "set", "price.level", "no.seats")]
   # should we do that or drop???
@@ -37,7 +40,7 @@ readData = function(useLogTransform) {
 
 preparePredictors = function(data, filterRegex) {
   
-  numVar = c("amount.donated.2013", "amount.donated.lifetime", "no.donations.lifetime", "years.donating", "is.us")
+  numVar = c("amount.donated.2013", "amount.donated.lifetime", "no.donations.lifetime", "years.donating", "is.us", "account.num")
   catVar = c("billing.city", "relationship")
 
   data$accounts$first.donated = substr(data$accounts$first.donated, 1, 4)
@@ -240,6 +243,17 @@ preparePredictors = function(data, filterRegex) {
 
   subsTrainWide$avg.8.years.if.no.var = subsTrainWide$avg.8.years * sapply(subsTrainWide$var.8.years == 0, as.numeric)
   
+  subsTrainWide$ever.bought.subs = sapply(((subsTrainWide$total_1996_1997 + subsTrainWide$total_1997_1998 + subsTrainWide$total_1998_1999 + subsTrainWide$total_1999_2000 + subsTrainWide$total_2000_2001 + subsTrainWide$total_2001_2002 + subsTrainWide$total_2002_2003 + subsTrainWide$total_2003_2004 + subsTrainWide$total_2004_2005 + subsTrainWide$total_2005_2006 +
+                                    subsTrainWide$total_2006_2007 + subsTrainWide$total_2007_2008 + subsTrainWide$total_2008_2009 + subsTrainWide$total_2009_2010 + subsTrainWide$total_2010_2011 + subsTrainWide$total_2011_2012 + subsTrainWide$total_2012_2013 + subsTrainWide$total_2013_2014) > 0), as.numeric)
+
+  subsTrainWide$num.bought.subs = sapply((subsTrainWide$total_1996_1997 > 0), as.numeric) + sapply((subsTrainWide$total_1997_1998 > 0), as.numeric) + sapply((subsTrainWide$total_1998_1999 > 0), as.numeric) + sapply((subsTrainWide$total_1999_2000 > 0), as.numeric) + sapply((subsTrainWide$total_2000_2001 > 0), as.numeric) + sapply((subsTrainWide$total_2001_2002 > 0), as.numeric) + 
+                                  sapply((subsTrainWide$total_2002_2003 > 0), as.numeric) + sapply((subsTrainWide$total_2003_2004 > 0), as.numeric) + sapply((subsTrainWide$total_2004_2005 > 0), as.numeric) + sapply((subsTrainWide$total_2005_2006 > 0), as.numeric) + sapply((subsTrainWide$total_2006_2007 > 0), as.numeric) + sapply((subsTrainWide$total_2007_2008 > 0), as.numeric) + 
+                                  sapply((subsTrainWide$total_2008_2009 > 0), as.numeric) + sapply((subsTrainWide$total_2009_2010 > 0), as.numeric) + sapply((subsTrainWide$total_2010_2011 > 0), as.numeric) + sapply((subsTrainWide$total_2011_2012 > 0), as.numeric) + sapply((subsTrainWide$total_2012_2013 > 0), as.numeric) + sapply((subsTrainWide$total_2013_2014 > 0), as.numeric)
+    
+  subsTrainWide$ever.bought.ticket = sapply(((subsTrainWide$add_tickets_total_2010_2011 + subsTrainWide$add_tickets_total_2011_2012 + subsTrainWide$add_tickets_total_2012_2013 + subsTrainWide$add_tickets_total_2013_2014) > 0), as.numeric)
+
+  subsTrainWide$num.bought.ticket = sapply((subsTrainWide$add_tickets_total_2010_2011 > 0), as.numeric) + sapply((subsTrainWide$add_tickets_total_2011_2012 > 0), as.numeric) + sapply((subsTrainWide$add_tickets_total_2012_2013 > 0), as.numeric) + sapply((subsTrainWide$add_tickets_total_2013_2014 > 0), as.numeric)
+  
   # fixing character columns to factors
   i <- sapply(subsTrainWide, is.character)
   i[c("account.id")] = FALSE
@@ -285,12 +299,17 @@ cleanData = function (data) {
 
   #high residuals
   
-  
-  data$trainSet=data$trainSet[!((rownames(data$trainSet)==6031)),]
-  data$allSet=data$allSet[!((rownames(data$allSet)==6031)),]
+  #data$trainSet = data$trainSet[sum(c(data$trainSet$total_2011_2012, data$trainSet$total_2012_2013, data$trainSet$total_2013_2014)) != 0, ]
+  #data$allSet = data$allSet[sum(c(data$allSet$total_2011_2012, data$allSet$total_2012_2013, data$allSet$total_2013_2014)) != 0, ]
 
-  data$trainSet=data$trainSet[!((rownames(data$trainSet)==1472)),]
-  data$allSet=data$allSet[!((rownames(data$allSet)==1472)),]
+  data$trainSet = data$trainSet[abs(data$trainSet$total - data$trainSet$total_2013_2014) <= 2 , ]
+  data$allSet = data$trainSet[abs(data$allSet$total - data$allSet$total_2013_2014) <= 2, ]
+  
+  #data$trainSet=data$trainSet[!((rownames(data$trainSet)==6031)),]
+  #data$allSet=data$allSet[!((rownames(data$allSet)==6031)),]
+
+  #data$trainSet=data$trainSet[!((rownames(data$trainSet)==1472)),]
+  #data$allSet=data$allSet[!((rownames(data$allSet)==1472)),]
 
   #data$trainSet=data$trainSet[!((rownames(data$trainSet)==1649)),]
   #data$allSet=data$allSet[!((rownames(data$allSet)==1649)),]
@@ -301,13 +320,13 @@ cleanData = function (data) {
   #data$trainSet=data$trainSet[!((rownames(data$trainSet)==567)),]
   #data$allSet=data$allSet[!((rownames(data$allSet)==567)),]
   
-  data$trainSet=data$trainSet[!((rownames(data$trainSet)==306)),]
-  data$trainSet=data$trainSet[!((rownames(data$trainSet)==363)),]
-  data$trainSet=data$trainSet[!((rownames(data$trainSet)==427)),]
+  #data$trainSet=data$trainSet[!((rownames(data$trainSet)==306)),]
+  #data$trainSet=data$trainSet[!((rownames(data$trainSet)==363)),]
+  #data$trainSet=data$trainSet[!((rownames(data$trainSet)==427)),]
   
-  data$allSet=data$allSet[!((rownames(data$allSet)==306)),]
-  data$allSet=data$allSet[!((rownames(data$allSet)==363)),]
-  data$allSet=data$allSet[!((rownames(data$allSet)==427)),]
+  #data$allSet=data$allSet[!((rownames(data$allSet)==306)),]
+  #data$allSet=data$allSet[!((rownames(data$allSet)==363)),]
+  #data$allSet=data$allSet[!((rownames(data$allSet)==427)),]
   
   #data$trainSet = data$trainSet[ - (abs(data$trainSet$total - data$trainSet$total_2013_2014)>1.5),]
   #data$allSet = data$allSet[ - (abs(data$allSet$total - data$allSet$total_2013_2014)>1.5),]

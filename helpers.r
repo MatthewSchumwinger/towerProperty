@@ -96,11 +96,15 @@ prepareFormula = function(useLogTransform) {
   return (formula)
 }
 
+adjustPredictionsRound = function(myPredictions, accounts, allTestSet) {
+  return (round(myPredictions*2)/2)
+}
+
 adjustPredictionsInactive = function(myPredictions, accounts, allTestSet) {
 
   filteredMySet = merge(accounts, allTestSet, by="account.id", all.x=T, all.y=F)
 
-  activeClients = filteredMySet$total_2009_2010 + filteredMySet$total_2010_2011 + filteredMySet$total_2011_2012 + filteredMySet$total_2012_2013 + filteredMySet$total_2013_2014
+  activeClients = filteredMySet$total_2008_2009 + filteredMySet$total_2009_2010 + filteredMySet$total_2010_2011 + filteredMySet$total_2011_2012 + filteredMySet$total_2012_2013 + filteredMySet$total_2013_2014
   activeClientsBinary = sapply(activeClients > 0, as.numeric)
   
   myPredictions = myPredictions * activeClientsBinary
@@ -113,7 +117,7 @@ adjustPredictionsInvariant = function(myPredictions, accounts, allTestSet) {
   myPredictions = adjustPredictionsInactive(myPredictions, accounts, allTestSet)
   
   filteredMySet = merge(accounts, allTestSet, by="account.id", all.x=T, all.y=F)
-  df = data.frame(filteredMySet$total_2009_2010, filteredMySet$total_2010_2011, filteredMySet$total_2011_2012, filteredMySet$total_2012_2013, filteredMySet$total_2013_2014)
+  df = data.frame(filteredMySet$total_2005_2006, filteredMySet$total_2006_2007, filteredMySet$total_2007_2008, filteredMySet$total_2008_2009, filteredMySet$total_2009_2010, filteredMySet$total_2010_2011, filteredMySet$total_2011_2012, filteredMySet$total_2012_2013, filteredMySet$total_2013_2014)
   varClients = apply(df, 1, var)
   
   varNonZeroClients = sapply(varClients != 0, as.numeric)

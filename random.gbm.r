@@ -100,7 +100,7 @@ while(TRUE) {
     print("Raw prediction")
     testError = testError + evaluateModel(gbm.boost, data$testAnswers, useLogTransform)
     
-    if(i == 1 && testError > 0.108)
+    if(i == 1 && testError > 0.109)
     {
       break;
     }

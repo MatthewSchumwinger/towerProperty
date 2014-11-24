@@ -21,8 +21,10 @@ allData = prepareSplits(rawData, allPredictors, c(0))
 filter = "199|200|2010|price.level|add_no|TELEMAN|JOHANN|ROSSINI|conc_missed|add_price|add_tickets|add_tickets_seats|section_2013_2014|multiple.subs|billing.city|is.us|relationship|outside|City|State|Lat|Long|package|section|location" 
 useLogTransform = FALSE 
 kernel="radial"
-cost=1000
-gamma=1
+coef0=0
+cost=20
+degree=1
+gamma=0.025
 numfolds = 10
 
 rawData = readData(useLogTransform)
@@ -35,6 +37,7 @@ folds = sample(1:numfolds, nrow(allData$allSet), replace=T)
 
 predictors = preparePredictors(rawData, filter)
 
+trainError = 0
 testError = 0
 testErrorInact = 0
 testErrorVar = 0
@@ -42,8 +45,14 @@ for(i in 1:numfolds) {
   
   data = prepareSplits(rawData, predictors, which(folds == i))
 
-  svm.fit = svm(formula, data=data$trainSet, kernel=kernel, cost=cost, gamma=gamma)
+  print(paste("Start svm fold ", i))
+  svm.fit = svm(formula, data=data$trainSet, kernel=kernel, cost=cost, gamma=gamma, coef0=coef0, degree=degree)
   svm.pred = predict(svm.fit, newdata=data$testSet)
+
+  svm.train = predict(svm.fit, newdata=data$trainSet)
+
+  print("Train prediction")
+  trainError = trainError + evaluateModel(svm.train, data$trainSet$total, useLogTransform)
   
   print("Raw prediction")
   testError = testError + evaluateModel(svm.pred, data$testAnswers, useLogTransform)
@@ -63,7 +72,9 @@ print(paste("Final test error raw prediction=", testError / tries, " based on ",
 print(paste("Final test error with inactive adj=", testErrorInact / tries, " based on ", tries, " tries"))
 print(paste("Final test error with no variance adj =", testErrorVar / tries, " based on ", tries, " tries"))
 
-
+tune.out = tune(svm, total~., data=data$allSet, kernel="radial", ranges=list(cost=c(20,35,50),gamma=c(0.025, 0.05, 0.075)))
+tune.out
+tune.out$performances
 
 svm.fit = svm(formula, data=data$allSet, kernel=kernel, cost=cost, gamma=gamma)
 
