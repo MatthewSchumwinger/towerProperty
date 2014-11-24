@@ -32,6 +32,7 @@ readData = function(useLogTransform) {
   
   # account.billing.zip linked to geo data by account
   geo = read.csv('data/geo.account.csv',colClasses='character') # MS: improve by geo-coding 2000+ accounts with null zips
+  geo$hotspot[is.na(geo$hotspot)]  = "No" # populate "NAs"
 
   attended = read.csv('data/attended.csv',colClasses='character')
   
@@ -97,7 +98,7 @@ preparePredictors = function(data, filterRegex) {
   data$subscriptions[numVar] = sapply(data$subscriptions[numVar], as.numeric)
   
   # bring in geo predictors
-  catGeo <- c("State", "City") # categorical variables
+  catGeo <- c("State", "City", "hotspot") # categorical variables
   numGeo <- c("Lat", "Long") # numeric variables
   data$geoFactors = data$geo[, c("account.id", catGeo)]
   data$geoFactors[catGeo] = sapply(data$geoFactors[catGeo], addNA) 
@@ -198,7 +199,7 @@ preparePredictors = function(data, filterRegex) {
   subsTrainWide = merge(subsTrainWide, factorsSubsTrainWide, by = "account.id", all.x = TRUE) 
   subsTrainWide = merge(subsTrainWide, data$accountsFactor, by = "account.id", all.x = TRUE) 
   
-  subsTrainWide = merge(subsTrainWide, data$geoFactors, by = "account.id", all.x = TRUE) # MS: add state, city
+  subsTrainWide = merge(subsTrainWide, data$geoFactors, by = "account.id", all.x = TRUE) # MS: add state, city, hotspot
   
   # fixing hyphens in names
   names(subsTrainWide) = sapply(names(subsTrainWide), str_replace, "-", "_")
