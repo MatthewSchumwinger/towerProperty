@@ -64,14 +64,17 @@ for(i in 1:numfolds) {
   print(paste("Start ksvm fold ", i))
   ksvm.fit = ksvm(total~.,data=data$trainSet, scaled=T, kernel=kernel, kpar=kpar,
                   C=C, epsilon=epsilon, tol=tol, cross=cross, type=type)
+  print(ksvm.fit)
   ksvm.pred = predict(ksvm.fit, newdata=data$testSet)
   ksvm.train = predict(ksvm.fit, newdata=data$trainSet)
   print("Train prediction")
   #trainError = trainError + evaluateModel(ksvm.train, data$trainSet$total, useLogTransform)
   trainError = trainError + (1-mean(ksvm.train==data$trainSet$total))
+  print(trainError/i)
   print("Raw prediction")
   #testError = testError + evaluateModel(ksvm.pred, data$testAnswers, useLogTransform)
   testError = testError + (1-mean(ksvm.pred==data$testAnswers))
+  print(testError/i)
   
   #print("Adjusting for inactive")
   #adjusted = adjustPredictionsInactive(ksvm.pred, data.frame("account.id"=data$testAccounts), allData$predictors)
@@ -81,7 +84,7 @@ for(i in 1:numfolds) {
   #adjusted2 = adjustPredictionsInvariant(ksvm.pred, data.frame("account.id"=data$testAccounts), allData$predictors)
  # testErrorVar = testErrorVar + evaluateModel(adjusted2, data$testAnswers, useLogTransform)
   
-#}
+}
 
 #tries = numfolds
 #print(paste("Final train error raw prediction=", trainError / tries, " based on ", tries, " tries"))
@@ -106,7 +109,6 @@ if(useLogTransform) {
 }
 
 #dumpResponse("MS_svm_c-scv_sub", predictSet$accounts)
-
 prefix =  "MS_svm_c-scv_sub"
 entry=cbind(predictSet$accounts, as.character(predictions))
 write.csv(entry, paste(prefix, format(Sys.time(), "%b_%d_%Y"),".csv", sep=""), row.names = FALSE)  
