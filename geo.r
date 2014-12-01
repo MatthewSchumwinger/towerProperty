@@ -8,6 +8,7 @@
 # map geos
 
 library(stringr)
+library(fields)
 
 geo <- rawData$accounts
 geo <- as.data.frame(geo[, c(1,3)])
@@ -32,7 +33,6 @@ for (i in 1:19833){
 }
 table(str_length(geo[,2]))
 
-
 # read in and process zip code directory
 zipDir <- read.csv('data/free-zipcode-database-Primary.csv',colClasses='character')
 # add missing zero to four-digit US geos
@@ -51,10 +51,39 @@ hot <- read.csv("data/hotspot.csv", as.is=T)
 hot <- hot[,c(4,16)]
 geo <- merge(geo, hot, by="account.id", all.x=T)
 
-
-
 # dump csv with geos for use as categorical predictors
 write.csv(geo, "data/geo.account.csv", row.names=F)
+
+
+
+# add distance from account to the 3 locations
+geo <- read.csv("data/geo.account.csv")
+
+# locations
+dBerkley <- c(37.867005,-122.261542)
+dSF <- c(37.7763272,-122.421545)
+dPeninsula <- c(37.4320436,-122.1661352)
+venues <- rbind(d.Berkley, d.SF, d.Peninsula)
+venues <- venues[,c(2,1)]
+colnames(venues) = c("Long","Lat")
+
+
+locDist <- rdist.earth(geo[,c(8,7)], venues)
+geo <- cbind(geo,locDist)
+
+# dump csv for use in data.r
+write.csv(geo, "data/geo.account.csv", row.names=F)
+
+# run gbm model first before executing script below for this 
+topPred = summary(gbm.orch)
+write.csv(topPred, "topPred.csv", row.names=F)
+# dump csv for mapping
+geo <- merge(geo, data$allSetAll, by="account.id", all.y=T)
+write.csv(geo, "viz/topPred.csv", row.names=F)
+
+
+
+
 
 
 ####### ------ old code below ############
@@ -90,10 +119,6 @@ data$geoNum = data$geo[, c("account.id", numGeo)]
 data$accounts$geo.state = "" # MS: add state predictor
 states = data$geo[, c("account.id", "State")]
 data$accounts$geo.state = merge(data$accounts, states, by="account.id", all.x=T) # MS: pull in state from zip code merge
-
-
-
-numGeo <- c("Lat", "Lon")
 
 
 

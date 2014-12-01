@@ -41,10 +41,18 @@ polyOrder = 2
 formula = prepareFormula(useLogTransform)
 
 set.seed(551724)
-folds = sample(1:numfolds, nrow(allData$allSet), replace=T)
+#folds = sample(1:numfolds, nrow(allData$allSet), replace=T)
+folds = "all"
 
 predictors = preparePredictors(rawData, filter)
 
+##
+data = rawData
+if(clean) {
+  data = cleanData(data)    
+}
+data = prepareSplits(rawData, predictors, which(folds == "all"))
+data$trainSet$total = as.factor(data$trainSet$total) # change to factors
 
 ## ----- skip this CV section ----
 trainError = 0
@@ -86,9 +94,9 @@ for(i in 1:numfolds) {
   
 }
 
-#tries = numfolds
-#print(paste("Final train error raw prediction=", trainError / tries, " based on ", tries, " tries"))
-#print(paste("Final test error raw prediction=", testError / tries, " based on ", tries, " tries"))
+tries = numfolds
+print(paste("Final train error raw prediction=", trainError / tries, " based on ", tries, " tries"))
+print(paste("Final test error raw prediction=", testError / tries, " based on ", tries, " tries"))
 #print(paste("Final test error with inactive adj=", testErrorInact / tries, " based on ", tries, " tries"))
 #print(paste("Final test error with no variance adj =", testErrorVar / tries, " based on ", tries, " tries"))
 
@@ -102,14 +110,14 @@ predictSetAll = prepareDataToPredict(allData$predictors)
 predictions = predict(ksvm.fit, newdata=predictSet$testSet)#, n.trees=trees)
 
 #predictions = adjustPredictionsInactive(predictions, data.frame("account.id"=predictSet$accounts), 
-                                        predictSetAll$testSetAll)
+#                                        predictSetAll$testSetAll)
 
 if(useLogTransform) {
   predictions = exp(predictions)-1
 }
 
 #dumpResponse("MS_svm_c-scv_sub", predictSet$accounts)
-prefix =  "MS_svm_c-scv_sub"
+prefix =  "MS_svm_c-scv_subB"
 entry=cbind(predictSet$accounts, as.character(predictions))
 write.csv(entry, paste(prefix, format(Sys.time(), "%b_%d_%Y"),".csv", sep=""), row.names = FALSE)  
 

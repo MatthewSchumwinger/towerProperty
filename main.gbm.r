@@ -17,7 +17,7 @@ rawData = readData(FALSE)
 allPredictors = preparePredictors(rawData, filter)
 allData = prepareSplits(rawData, allPredictors, c(0))
 
-filter = "199|200|2010|2011|add_no|conc|TELEMAN|JOHANN|ROSSINI|add_price|conc_missed|ever.bought.subs|num.bought.ticket|add_tickets|add_tickets_seats|section_2013_2014|multiple.subs|billing.city|is.us|relationship|outside|City|State|Lat|Long|geo|hotspot" 
+filter = "199|200|2010|2011|add_no|conc|TELEMAN|JOHANN|ROSSINI|add_price|conc_missed|ever.bought.subs|num.bought.ticket|add_tickets|add_tickets_seats|section_2013_2014|multiple.subs|billing.city|is.us|relationship|outside|City|State|Lat|Long|geo|hotspot|Berkley|Peninsula" 
 useLogTransform = F
 trees = 3000 
 bagfrac = 0.5 
