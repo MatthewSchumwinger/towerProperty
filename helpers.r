@@ -1,6 +1,7 @@
 
 adjustAnswer = function(score) {
   
+  score = as.numeric(score)
   threshold = 0.03
   if(score < threshold) {
     return (0)
@@ -108,6 +109,40 @@ adjustPredictionsInactive = function(myPredictions, accounts, allTestSet) {
   activeClientsBinary = sapply(activeClients > 0, as.numeric)
   
   myPredictions = myPredictions * activeClientsBinary
+  return(myPredictions)
+  
+}
+
+adjustPredictionsGeo = function(myPredictions, accounts, allTestSet) {
+  
+  filteredMySet = merge(accounts, allTestSet, by="account.id", all.x=T, all.y=F)
+  
+  caClients = as.character(filteredMySet$State) == "CA" 
+  caClients[is.na(caClients)] <- F 
+  caClientsBinary = sapply(caClients > 0, as.numeric)
+  
+  myPredictions = myPredictions * caClientsBinary
+  return(myPredictions)
+  
+}
+
+adjustPredictionsGeoDist = function(myPredictions, accounts, allTestSet) {
+  
+  filteredMySet = merge(accounts, allTestSet, by="account.id", all.x=T, all.y=F)
+  
+  distClients = as.numeric(filteredMySet$dSF) 
+  distClients[is.na(distClients)] <- 0 
+  
+  distClientsClose = sapply(distClients <= 300, as.numeric)
+  distClientsClose[distClientsClose == 1] = 10000
+  distClientsClose[distClientsClose == 0] = 0
+  
+  distClientsVeryClose = sapply(distClients <= 60, as.numeric)
+  distClientsVeryClose[distClientsVeryClose == 1] = 10000
+  distClientsVeryClose[distClientsVeryClose == 0] = 1
+  
+  myPredictions = pmin(myPredictions, distClientsClose)
+  myPredictions = pmin(myPredictions, distClientsVeryClose)  
   return(myPredictions)
   
 }

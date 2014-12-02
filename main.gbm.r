@@ -17,16 +17,16 @@ rawData = readData(FALSE)
 allPredictors = preparePredictors(rawData, filter)
 allData = prepareSplits(rawData, allPredictors, c(0))
 
-filter = "199|200|2010|2011|add_no|conc|TELEMAN|JOHANN|ROSSINI|add_price|conc_missed|ever.bought.subs|num.bought.ticket|add_tickets|add_tickets_seats|section_2013_2014|multiple.subs|billing.city|is.us|relationship|outside|City|State|Lat|Long|geo|hotspot|Berkley|Peninsula" 
+filter = "199|200|2010|2011|no.seats|6.years|8.years|SF|add_no|add_donated|TELEMAN|JOHANN|ROSSINI|add_price|conc_missed|ever.bought.subs|num.bought.ticket|add_tickets|add_tickets_seats|section_2013_2014|multiple.subs|billing.city|is.us|relationship|outside|Lat|Long|geo|Peninsula|Berkley|State|hotspot|City"
 useLogTransform = F
-trees = 3000 
+trees = 3375 
 bagfrac = 0.5 
 trainfrac = 1.0
 shrinkage = 0.001
-depth = 10
+depth = 8
 distrib = "tdist"
-minobsinnode = 4
-df = 1
+minobsinnode = 5
+df = 8
 numfolds = 10
 clean = T
 
@@ -45,6 +45,8 @@ testError = 0
 testErrorInact = 0
 testErrorVar = 0
 testErrorRound = 0
+testErrorGeo = 0
+testErrorGeoDist = 0
 trainError = 0
 for(i in 1:numfolds) {
   
@@ -87,6 +89,15 @@ for(i in 1:numfolds) {
   adjusted3 = adjustPredictionsRound(gbm.boost, data.frame("account.id"=data$testAccounts), allData$predictors)
   testErrorRound = testErrorRound + evaluateModel(adjusted3, data$testAnswers, useLogTransform)
 
+  print("Adjusting for California")
+  adjusted4 = adjustPredictionsGeo(gbm.boost, data.frame("account.id"=data$testAccounts), allData$predictors)
+  testErrorGeo = testErrorGeo + evaluateModel(adjusted4, data$testAnswers, useLogTransform)
+  
+  print("Adjusting for distance")
+  adjusted5 = adjustPredictionsGeoDist(gbm.boost, data.frame("account.id"=data$testAccounts), allData$predictors)
+  testErrorGeoDist = testErrorGeoDist + evaluateModel(adjusted5, data$testAnswers, useLogTransform)
+  
+  
   print("End fold")
   print("End fold")
   print("End fold")
@@ -98,6 +109,8 @@ print(paste("Final test error raw prediction=", testError / tries, " based on ",
 print(paste("Final test error with inactive adj=", testErrorInact / tries, " based on ", tries, " tries"))
 print(paste("Final test error with no variance adj =", testErrorVar / tries, " based on ", tries, " tries"))
 print(paste("Final test error with rounding =", testErrorRound / tries, " based on ", tries, " tries"))
+print(paste("Final test error with California =", testErrorGeo / tries, " based on ", tries, " tries"))
+print(paste("Final test error with distance =", testErrorGeoDist / tries, " based on ", tries, " tries"))
 
 
 summary(gbm.orch)
