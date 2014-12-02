@@ -9,10 +9,26 @@
 
 library(stringr)
 library(fields)
+library(mi)
 
 geo <- rawData$accounts
+
+## inspect
+geo$billing.zip.code[geo$billing.zip.code ==""] <- NA
+geo$billing.city[geo$billing.city ==""] <- NA
+mp.plot(geo, y.order = TRUE, x.order = F, clustered = FALSE, gray.scale = TRUE)
+
+head(geo[sort(geo$billing.city),])
+
+
+
+
+
 geo <- as.data.frame(geo[, c(1,3)])
 table(str_length(geo[,2]))
+table(is.na(geo[,2]))
+t <- table(geo[,2])
+
 
 # add missing zero to four-digit US geos
 for (i in 1:19833){
@@ -63,7 +79,7 @@ geo <- read.csv("data/geo.account.csv")
 dBerkley <- c(37.867005,-122.261542)
 dSF <- c(37.7763272,-122.421545)
 dPeninsula <- c(37.4320436,-122.1661352)
-venues <- rbind(d.Berkley, d.SF, d.Peninsula)
+venues <- rbind(dBerkley, dSF, dPeninsula)
 venues <- venues[,c(2,1)]
 colnames(venues) = c("Long","Lat")
 
@@ -80,7 +96,10 @@ write.csv(topPred, "topPred.csv", row.names=F)
 # dump csv for mapping
 geo <- merge(geo, data$allSetAll, by="account.id", all.y=T)
 write.csv(geo, "viz/topPred.csv", row.names=F)
-
+# dump locations for mapping
+venues <- venues[,c(2,1)]
+write.csv(venues, "viz/venues.csv", row.names=T)
+#need to add field name to row names manually
 
 
 
