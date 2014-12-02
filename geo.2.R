@@ -13,19 +13,8 @@ library(mi)
 
 geo <- rawData$accounts
 
-## inspect
-geo$billing.zip.code[geo$billing.zip.code ==""] <- NA
-geo$billing.city[geo$billing.city ==""] <- NA
-mp.plot(geo, y.order = TRUE, x.order = F, clustered = FALSE, gray.scale = TRUE)
-
-## tag 1 if originally NULL in billing.zip.code and billing.city; 0 otherwise
-geo$missing <- 0
-geo$missing[is.na(geo$billing.zip.code)&is.na(geo$billing.city)] <- 1
-table(geo$missing)
-
-geo <- as.data.frame(geo[, c(1,3,5,12)])
+geo <- as.data.frame(geo[, c(1,3,5)]) #c(1,3)
 table(str_length(geo[,2]))
-table(is.na(geo[,2]))
 
 # add missing zero to four-digit US geos
 for (i in 1:19833){
@@ -44,6 +33,16 @@ for (i in 1:19833){
   }
 }
 table(str_length(geo[,2]))
+
+## inspect
+geo$billing.zip.code[geo$billing.zip.code ==""] <- NA
+geo$billing.city[geo$billing.city ==""] <- NA
+mp.plot(geo, y.order = TRUE, x.order = F, clustered = FALSE, gray.scale = TRUE)
+
+## tag 1 if originally NULL in billing.zip.code and billing.city; 0 otherwise
+geo$missing <- 0
+geo$missing[is.na(geo$billing.zip.code)&is.na(geo$billing.city)] <- 1
+table(geo$missing)
 
 # read in and process zip code directory
 zipDir <- read.csv('data/free-zipcode-database-Primary.csv',colClasses='character')
@@ -64,10 +63,16 @@ hot <- read.csv("data/hotspot.csv", as.is=T)
 hot <- hot[,c(4,16)]
 geo <- merge(geo, hot, by="account.id", all.x=T)
 
+#***# populate billing.zip.codes/STATE from billing.city
+#nozip <- geo[is.na(geo$billing.zip.code),]
+#nozip <- subset(geo, is.na(billing.zip.code)&!is.na(billing.city))
+#sort(table(nozip$billing.city))
+
+
+
+
 # dump csv with geos for use as categorical predictors
 write.csv(geo, "data/geo.account.csv", row.names=F)
-
-
 
 # add distance from account to the 3 locations
 geo <- read.csv("data/geo.account.csv")
@@ -80,14 +85,6 @@ venues <- venues[,c(2,1)]
 colnames(venues) = c("Long","Lat")
 locDist <- rdist.earth(geo[,c(8,7)], venues)
 geo <- cbind(geo,locDist)
-
-## populate billing.zip.codes/STATE from billing.city
-#nozip <- geo[is.na(geo$billing.zip.code),]
-#nozip <- subset(geo, is.na(billing.zip.code)&!is.na(billing.city))
-#sort(table(nozip$billing.city))
-
-
-
 
 
 ## dump csv for use in data.r
