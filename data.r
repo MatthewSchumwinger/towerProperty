@@ -100,7 +100,7 @@ preparePredictors = function(data, filterRegex) {
   
   # bring in geo predictors
   catGeo <- c("State", "City", "hotspot") # categorical variables
-  numGeo <- c("Lat", "Long","d.SF","d.Peninsula","d.Berkley", "missing") # numeric variables
+  numGeo <- c("Lat", "Long","dSF","dPeninsula","dBerkley", "missing") # numeric variables
   data$geoFactors = data$geo[, c("account.id", catGeo)]
   data$geoFactors[catGeo] = sapply(data$geoFactors[catGeo], addNA) 
   #data$geoFactors[catGeo] = sapply(data$geoFactors[catGeo], as.factor) 
