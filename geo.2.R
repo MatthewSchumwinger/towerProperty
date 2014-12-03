@@ -63,10 +63,20 @@ hot <- read.csv("data/hotspot.csv", as.is=T)
 hot <- hot[,c(4,16)]
 geo <- merge(geo, hot, by="account.id", all.x=T)
 
-#***# populate billing.zip.codes/STATE from billing.city
-#nozip <- geo[is.na(geo$billing.zip.code),]
-#nozip <- subset(geo, is.na(billing.zip.code)&!is.na(billing.city))
-#sort(table(nozip$billing.city))
+
+# tag accounts with null billing.zip.codes as "CA" if billing.city is a California city
+geo[19751,3] <- NA #removed value with troublesome "/"
+caCity <- as.data.frame(table(subset(geo, State=="CA", select=City))) #list of CA cities
+noZip <- is.na(geo$billing.zip.code) # index of accounts with no billing.zip.code value
+df.noZip <- subset(geo, is.na(billing.zip.code)) 
+
+######## this is code I can't get to work ##################
+geo$test <- "" # create temp column to test code. If it works, then update directly to geo$State
+for (i in 1:973){
+  geo$test[str_detect(as.character(geo[t,3]), ignore.case(as.character(caCity[i,1])))] <- "CA" # need to subset for missing
+}
+table(geo$test) # CA must be less than 2955
+###########################################################
 
 
 
@@ -76,6 +86,7 @@ write.csv(geo, "data/geo.account.csv", row.names=F)
 
 # add distance from account to the 3 locations
 geo <- read.csv("data/geo.account.csv")
+
 # locations
 dBerkley <- c(37.867005,-122.261542)
 dSF <- c(37.7763272,-122.421545)
@@ -90,7 +101,7 @@ geo <- cbind(geo,locDist)
 ## dump csv for use in data.r
 write.csv(geo, "data/geo.account.csv", row.names=F)
 
-# run gbm model first before executing script below for this 
+######## top predictors for mapping (uses main.gbm.r objects) ######
 topPred = summary(gbm.orch)
 write.csv(topPred, "topPred.csv", row.names=F)
 # dump csv for mapping
@@ -104,8 +115,8 @@ write.csv(venues, "viz/venues.csv", row.names=T)
 
 
 
-
-####### ------ old code below ############
+####################################
+#######  old code below ############
 
 # add $is.us for US/non-us accounts ## inserted into data.r
 rawData$accounts$is.us = 1 # MS: tag foreign accounts by geo
