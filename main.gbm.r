@@ -17,7 +17,7 @@ rawData = readData(FALSE)
 allPredictors = preparePredictors(rawData, filter)
 allData = prepareSplits(rawData, allPredictors, c(0))
 
-filter = "199|200|2010|2011|no.seats|6.years|8.years|SF|add_no|add_donated|TELEMAN|JOHANN|ROSSINI|add_price|conc_missed|ever.bought.subs|num.bought.ticket|add_tickets|add_tickets_seats|section_2013_2014|multiple.subs|billing.city|is.us|relationship|outside|Lat|Long|geo|Peninsula|Berkley|State|hotspot|City"
+filter = "199|200|2010|2011|no.seats|6.years|8.years|add_no|add_donated|TELEMAN|JOHANN|ROSSINI|add_price|conc_missed|ever.bought.subs|num.bought.ticket|add_tickets|add_tickets_seats|section_2013_2014|multiple.subs|billing.city|is.us|relationship|outside|Lat|Long|geo|Peninsula|Berkley|State|hotspot|City"
 useLogTransform = F
 trees = 3375 
 bagfrac = 0.5 
@@ -40,6 +40,9 @@ set.seed(551724)
 folds = sample(1:numfolds, nrow(allData$allSet), replace=T)
 
 predictors = preparePredictors(rawData, filter)
+# convert dSF from factor to numeric
+predictors$dSF <-as.numeric(levels(predictors$dSF))[predictors$dSF]
+
 
 testError = 0
 testErrorInact = 0
@@ -152,4 +155,4 @@ if(useLogTransform) {
   predictions = exp(predictions)-1
 }
 
-dumpResponse("ML_gbm_sub", predictSet$accounts, predictions)
+dumpResponse("MS_gbm_sub", predictSet$accounts, predictions)
