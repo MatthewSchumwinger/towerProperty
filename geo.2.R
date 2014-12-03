@@ -77,9 +77,21 @@ for (i in 1:973){
 }
 table(geo$test) # CA must be less than 2955
 ###########################################################
+noZipIndices = which(noZip)
+for(j in noZipIndices){
+  for (i in 1:973){
+    city = str_trim(tolower(as.character(geo[j,3])))
+    cal = str_trim(tolower(as.character(caCity[i,1])))
+    if(!is.na(city) && !is.na(cal) && city == cal) {
+      print(paste("Assigned ", j, " city ", city))
+      geo$State[j] <- "CA" # need to subset for missing
+      break
+    }
+  }
+}
+table(geo$State) 
 
-
-
+#######
 
 # dump csv with geos for use as categorical predictors
 write.csv(geo, "data/geo.account.csv", row.names=F)
