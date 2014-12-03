@@ -73,7 +73,7 @@ df.noZip <- subset(geo, is.na(billing.zip.code))
 ######## this is code I can't get to work ##################
 geo$test <- "" # create temp column to test code. If it works, then update directly to geo$State
 for (i in 1:973){
-  geo$test[str_detect(as.character(geo[t,3]), ignore.case(as.character(caCity[i,1])))] <- "CA" # need to subset for missing
+  geo$test[str_detect(as.character(geo[noZip,3]), ignore.case(as.character(caCity[i,1])))] <- "CA" # need to subset for missing
 }
 table(geo$test) # CA must be less than 2955
 ###########################################################
