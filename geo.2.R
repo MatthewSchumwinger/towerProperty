@@ -71,11 +71,11 @@ noZip <- is.na(geo$billing.zip.code) # index of accounts with no billing.zip.cod
 df.noZip <- subset(geo, is.na(billing.zip.code)) 
 
 ######## this is code I can't get to work ##################
-geo$test <- "" # create temp column to test code. If it works, then update directly to geo$State
-for (i in 1:973){
-  geo$test[str_detect(as.character(geo[noZip,3]), ignore.case(as.character(caCity[i,1])))] <- "CA" # need to subset for missing
-}
-table(geo$test) # CA must be less than 2955
+#geo$test <- "" # create temp column to test code. If it works, then update directly to geo$State
+#for (i in 1:973){
+#  geo$test[str_detect(as.character(geo[noZip,3]), ignore.case(as.character(caCity[i,1])))] <- "CA" # need to subset for missing
+#}
+#table(geo$test) # CA must be less than 2955
 ###########################################################
 noZipIndices = which(noZip)
 for(j in noZipIndices){
@@ -118,6 +118,8 @@ topPred = summary(gbm.orch)
 write.csv(topPred, "topPred.csv", row.names=F)
 # dump csv for mapping
 geo <- merge(geo, data$allSetAll, by="account.id", all.y=T)
+colnames(geo)[1] <- "accountID"
+colnames(geo)[2] <- "billingZipCode"
 write.csv(geo, "viz/topPred.csv", row.names=F)
 # dump locations for mapping
 venues <- venues[,c(2,1)]
